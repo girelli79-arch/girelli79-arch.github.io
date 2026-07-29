@@ -61,11 +61,11 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 <header><div class='header-content'>
 <button id='festivalTitle' class='festival-title' type='button' onclick='toggleFestivalMenu()'>CSV importieren</button>
 <div class='header-actions'>
-<button class='reset-button' onclick='resetFavorites()' aria-label='Favoriten zurÃ¼cksetzen' title='Favoriten zurÃ¼cksetzen' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>â†º</button>
-<div class='zoom-control'><button class='zoom-toggle' type='button' onclick='toggleZoomMenu()' aria-label='SchriftgrÃ¶ÃŸe Ã¤ndern' title='SchriftgrÃ¶ÃŸe Ã¤ndern'>ðŸ”</button><div id='zoomMenu' class='zoom-menu'><label for='fontScale'>SchriftgrÃ¶ÃŸe <output id='fontScaleValue'>100%</output></label><input id='fontScale' type='range' min='70' max='160' step='5' value='100' oninput='updateFontScale(this.value)'><button type='button' onclick='updateFontScale(100)'>Auf 100% zurÃ¼cksetzen</button></div></div>
+<button class='reset-button' onclick='resetFavorites()' aria-label='Favoriten zurücksetzen' title='Favoriten zurücksetzen' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>&#x21BA;</button>
+<div class='zoom-control'><button class='zoom-toggle' type='button' onclick='toggleZoomMenu()' aria-label='Schriftgröße ändern' title='Schriftgröße ändern'>&#x1F50D;</button><div id='zoomMenu' class='zoom-menu'><label for='fontScale'>Schriftgröße <output id='fontScaleValue'>100%</output></label><input id='fontScale' type='range' min='70' max='160' step='5' value='100' oninput='updateFontScale(this.value)'><button type='button' onclick='updateFontScale(100)'>Auf 100% zurücksetzen</button></div></div>
 <div class='import-actions'><button class='import-toggle' type='button' onclick='toggleImportMenu()' aria-label='Festival importieren'>+</button><div id='importMenu' class='import-menu'><button class='csv-import-button' type='button' onclick='openLocalImport()'>CSV-Import</button><button class='online-button' type='button' onclick='openOnlineFromImportMenu()'>Online</button></div></div>
 <input id='scheduleFile' type='file' accept='.csv,text/csv' style='display:none'>
-<button class='now-button' onclick='jumpNow()' aria-label='Jetzt' title='Jetzt' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>â—·</button>
+<button class='now-button' onclick='jumpNow()' aria-label='Jetzt' title='Jetzt' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>&#x25F7;</button>
 </div>
 </div></header><div id='festivalMenu' class='festival-menu' aria-label='Gespeicherte Festivals'></div><div id='onlineMenu' class='festival-menu' aria-label='Online-Festivals'></div>
 <div class='tabs'>
@@ -202,7 +202,7 @@ document.querySelectorAll('.fav').forEach(btn=>{
  const card=btn.closest('.card');
  const draw=()=>{
    const on=favs.includes(id);
-   btn.textContent=on?'â˜…':'â˜†';
+   btn.textContent=on?String.fromCodePoint(0x2605):String.fromCodePoint(0x2606);
    card.classList.toggle('favorite',on);
  };
  draw();
@@ -220,7 +220,7 @@ function resetFavorites(){
   favs=[];
   save();
   document.querySelectorAll('.card').forEach(c=>c.classList.remove('favorite'));
-  document.querySelectorAll('.fav').forEach(btn=>btn.textContent='â˜†');
+  document.querySelectorAll('.fav').forEach(btn=>btn.textContent=String.fromCodePoint(0x2606));
   if(typeof refreshFavoriteBars==='function') refreshFavoriteBars();
 }
 
@@ -327,7 +327,7 @@ function setFestivalTitle(fileName){
 function bindImportedCard(card){
   const id=card.querySelector('.fav').dataset.id;
   const fav=card.querySelector('.fav');
-  const draw=()=>{const on=favs.includes(id);fav.textContent=on?'â˜…':'â˜†';card.classList.toggle('favorite',on);};
+  const draw=()=>{const on=favs.includes(id);fav.textContent=on?String.fromCodePoint(0x2605):String.fromCodePoint(0x2606);card.classList.toggle('favorite',on);};
   draw();
   fav.onclick=()=>{favs=favs.includes(id)?favs.filter(x=>x!==id):[...favs,id];save();draw();refreshFavoriteBars();};
   const inp=card.querySelector('.meinput'),meFill=card.querySelector('.meFill');
@@ -341,7 +341,7 @@ function renderFestivalMenu(){
  const menu=document.getElementById('festivalMenu');menu.innerHTML='';
  const entries=Object.entries(festivals).sort((a,b)=>a[1].name.localeCompare(b[1].name));
  if(!entries.length){menu.innerHTML='<div class="empty">Noch kein Festival importiert.</div>';return;}
- entries.forEach(([id,festival])=>{const row=document.createElement('div');row.className='festival-choice';const button=document.createElement('button');button.textContent=festival.name;button.classList.toggle('active',id===activeFestivalId);button.onclick=()=>{activateFestival(id);menu.classList.remove('open');};const remove=document.createElement('button');remove.className='delete-festival';remove.type='button';remove.title='Festival lÃ¶schen';remove.setAttribute('aria-label',festival.name+' lÃ¶schen');remove.textContent='ðŸ—‘';remove.onclick=()=>deleteFestival(id);row.append(button,remove);menu.appendChild(row);});
+ entries.forEach(([id,festival])=>{const row=document.createElement('div');row.className='festival-choice';const button=document.createElement('button');button.textContent=festival.name;button.classList.toggle('active',id===activeFestivalId);button.onclick=()=>{activateFestival(id);menu.classList.remove('open');};const remove=document.createElement('button');remove.className='delete-festival';remove.type='button';remove.title='Festival löschen';remove.setAttribute('aria-label',festival.name+' löschen');remove.textContent=String.fromCodePoint(0x1F5D1);remove.onclick=()=>deleteFestival(id);row.append(button,remove);menu.appendChild(row);});
 }
 function applyFontScale(percent){const value=Math.max(70,Math.min(160,Number(percent)||100));document.documentElement.style.setProperty('--font-scale',value/100);const slider=document.getElementById('fontScale'),label=document.getElementById('fontScaleValue');if(slider)slider.value=value;if(label)label.textContent=value+'%';localStorage.setItem('gfpFontScale',String(value));requestAnimationFrame(fitFestivalTitle);}
 function updateFontScale(percent){applyFontScale(percent);}
@@ -363,7 +363,7 @@ async function openOnlineMenu(){
    menu.innerHTML='<div class="online-description">Festival auswÃ¤hlen und direkt importieren</div>';
    items.forEach(item=>{
      if(!item||typeof item.file!=='string') return;
-     const button=document.createElement('button');button.textContent='â˜ '+(item.name||item.file.replace(/\.csv$/i,''));
+     const button=document.createElement('button');button.textContent=String.fromCodePoint(0x2601)+' '+(item.name||item.file.replace(/\.csv$/i,'')); 
      button.onclick=()=>loadOnlineFestival(item);menu.appendChild(button);
    });
  }catch(error){menu.innerHTML='<div class="error">Online-Liste konnte nicht geladen werden. PrÃ¼fe, ob csv/index.json auf GitHub Pages verÃ¶ffentlicht ist.</div>';}
@@ -392,7 +392,7 @@ function renderFestival(festival){
    entries.forEach((entry,index)=>{
      const id=`${day}-${index}`;
      const card=document.createElement('div');card.className='card';
-     card.innerHTML=`<button class="fav" data-id="${id}">â˜†</button><div class="time">${makeStageDot(entry.stage,stageColors.get(String(entry.stage||'').trim())||'transparent')}${escaped(entry.time)}</div><div class="name">${escaped(entry.name)}</div><div class="genre">${escaped(entry.genre)}</div><div class="scoreRow"><div class="scoreLine"><div class="scoreNum gvalue" data-gscore="${entry.score}">${entry.score}</div><div class="scoreBar"><div class="scoreFill gFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div><div class="scoreLine"><input class="meInput meinput" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill" style="width:0%"></div></div></div></div>${entry.spotify?`<a class="spotify" href="${escaped(entry.spotify)}" target="_blank" rel="noopener" aria-label="Spotify">ðŸŽ§</a>`:''}`;
+     card.innerHTML=`<button class="fav" data-id="${id}">&#9734;</button><div class="time">${makeStageDot(entry.stage,stageColors.get(String(entry.stage||'').trim())||'transparent')}${escaped(entry.time)}</div><div class="name">${escaped(entry.name)}</div><div class="genre">${escaped(entry.genre)}</div><div class="scoreRow"><div class="scoreLine"><div class="scoreNum gvalue" data-gscore="${entry.score}">${entry.score}</div><div class="scoreBar"><div class="scoreFill gFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div><div class="scoreLine"><input class="meInput meinput" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill" style="width:0%"></div></div></div></div>${entry.spotify?`<a class="spotify" href="${escaped(entry.spotify)}" target="_blank" rel="noopener" aria-label="Spotify">&#127911;</a>`:''}`;
      section.appendChild(card);bindImportedCard(card);
    });
  });
@@ -463,4 +463,3 @@ document.querySelectorAll('.card').forEach(card=>{
 });
 
 </script></body></html>
-
