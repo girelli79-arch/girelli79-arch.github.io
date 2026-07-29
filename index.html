@@ -54,17 +54,17 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .gscore{color:#9ecbff;font-weight:bold}
 .mescore,.gscore{display:flex;align-items:center;gap:4px}
 .mescore input{width:44px;background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:3px;text-align:center}
-@media (max-width:540px) and (orientation:portrait){:root{--tabs-top:86px;--content-top:142px;--favorites-top:130px}header{padding:7px 10px}.header-content{flex-direction:column;align-items:stretch;gap:5px}.festival-title{font-size:1.05rem;max-width:none;white-space:nowrap;overflow:visible;text-overflow:clip}.header-actions{justify-content:flex-end;gap:4px!important;width:100%}.header-actions>button{padding:6px 8px!important;font-size:.85rem}.import-toggle,.zoom-toggle{padding:6px 11px!important;font-size:1.1rem!important}.tabs button{min-height:44px;padding:10px 8px;font-size:1rem;font-weight:bold}.festival-menu{top:130px}}
+@media (max-width:540px) and (orientation:portrait){:root{--tabs-top:48px;--content-top:104px;--favorites-top:92px}header{padding:8px}.header-content{flex-direction:row;align-items:center;gap:3px}.festival-title{flex:1;min-width:0;font-size:clamp(.65rem,3vw,.95rem);max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header-actions{justify-content:flex-end;gap:3px!important;width:auto}.header-actions>button{padding:6px 7px!important}.reset-button span,.now-button span{display:none}.reset-button::after{content:'↺';font-size:1rem}.now-button::after{content:'◷';font-size:1rem}.import-toggle,.zoom-toggle{padding:6px 9px!important;font-size:1rem!important}.tabs button{min-height:44px;padding:10px 8px;font-size:1rem;font-weight:bold}.festival-menu{top:92px}}
 
 </style></head><body>
 <header><div class='header-content'>
 <button id='festivalTitle' class='festival-title' type='button' onclick='toggleFestivalMenu()'>CSV importieren</button>
 <div class='header-actions'>
-<button onclick='resetFavorites()' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Reset</button>
+<button class='reset-button' onclick='resetFavorites()' aria-label='Favoriten zurücksetzen' title='Favoriten zurücksetzen' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'><span>Reset</span></button>
 <div class='zoom-control'><button class='zoom-toggle' type='button' onclick='toggleZoomMenu()' aria-label='Schriftgröße ändern' title='Schriftgröße ändern'>🔍</button><div id='zoomMenu' class='zoom-menu'><label for='fontScale'>Schriftgröße <output id='fontScaleValue'>100%</output></label><input id='fontScale' type='range' min='70' max='160' step='5' value='100' oninput='updateFontScale(this.value)'><button type='button' onclick='updateFontScale(100)'>Auf 100% zurücksetzen</button></div></div>
 <div class='import-actions'><button class='import-toggle' type='button' onclick='toggleImportMenu()' aria-label='Festival importieren'>+</button><div id='importMenu' class='import-menu'><button type='button' onclick='openLocalImport()'>CSV-Import</button><button class='online-button' type='button' onclick='openOnlineFromImportMenu()'>Online</button></div></div>
 <input id='scheduleFile' type='file' accept='.csv,text/csv' style='display:none'>
-<button onclick='jumpNow()' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Jetzt</button>
+<button class='now-button' onclick='jumpNow()' aria-label='Jetzt' title='Jetzt' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'><span>Jetzt</span></button>
 </div>
 </div></header><div id='festivalMenu' class='festival-menu' aria-label='Gespeicherte Festivals'></div><div id='onlineMenu' class='festival-menu' aria-label='Online-Festivals'></div>
 <div class='tabs'>
