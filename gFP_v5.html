@@ -10,9 +10,8 @@ header{background:#8b0000;padding:14px;text-align:center;font-size:1.5rem;font-w
 .tabs button{flex:1;padding:12px;background:#222;color:#fff;border:0;font-size:1rem}
 .tabs button.active{background:#444}
 .tabcontent{padding:var(--content-top) 10px 10px}
-.card{background:#1d1d1d;border-left:5px solid #b71c1c;border-radius:10px;padding:12px;padding-right:130px;margin:10px 0;position:relative;transition:background .2s;scroll-margin-top:220px}
-.time{font-size:1.2rem;font-weight:bold;color:#81d4fa;display:flex;align-items:center;gap:.42em}
-.stage-dot{display:inline-block;flex:0 0 auto;width:.72em;height:.72em;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.35),0 1px 3px rgba(0,0,0,.55)}
+.card{background:#1d1d1d;border-left:10px solid #b71c1c;border-radius:10px;padding:12px;padding-right:130px;margin:10px 0;position:relative;transition:background .2s;scroll-margin-top:220px}
+.time{font-size:1.2rem;font-weight:bold;color:#81d4fa}
 .name{font-size:1.3rem;font-weight:bold;margin:6px 0}.card.favorite{background:#303030}.card.favorite .name{color:#ffd54f}
 .genre{color:#bbb}.editable-genre{cursor:text;border-bottom:1px dashed #666;padding:3px 2px;margin:3px -2px;min-height:1.2em}.editable-genre:focus{outline:1px solid #81d4fa;border-bottom-color:#81d4fa;background:#202a30}
 .spotify{position:absolute;right:12px;bottom:12px;font-size:1.8rem;text-decoration:none}
@@ -184,6 +183,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 <div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
 </div>
 <a class='spotify' href='https://open.spotify.com/search/Hypocrisy%20Eraser' target='_blank' aria-label='Spotify'>ðŸŽ§</a></div></section>
+<section id='Fr' class='tabcontent' style='display:none'><div class='favoritesBar'></div></section>
+<section id='Sa' class='tabcontent' style='display:none'><div class='favoritesBar'></div></section>
 <script>
 // Die HTML-Datei startet ohne Zeitplan. Karten werden ausschlieÃŸlich per CSV-Import erzeugt.
 document.querySelectorAll('.tabcontent .card').forEach(card=>card.remove());
@@ -386,13 +387,16 @@ function deleteFestival(id){
 function renderFestival(festival){
  const groups={Do:[],Fr:[],Sa:[]};festival.rows.forEach(entry=>groups[entry.day].push(entry));
  const stages=[...new Set(festival.rows.map(entry=>String(entry.stage||'').trim()).filter(Boolean))];
- const stageColors=new Map(stages.map((stage,index)=>[stage,'hsl('+Math.round(index*360/Math.max(stages.length,1))+', 78%, 54%)']));
+ // Gleichmäßig verteilte, gedeckte Farben: gut sichtbar auf dunklem Hintergrund, aber nicht knallig.
+ const stageColors=new Map(stages.map((stage,index)=>[stage,'hsl('+Math.round(index*360/Math.max(stages.length,1))+', 45%, 52%)']));
  Object.entries(groups).forEach(([day,entries])=>{
    const section=document.getElementById(day);section.innerHTML='<div class="favoritesBar"></div>';
    entries.forEach((entry,index)=>{
      const id=`${day}-${index}`;
      const card=document.createElement('div');card.className='card';
-     card.innerHTML=`<button class="fav" data-id="${id}">&#9734;</button><div class="time">${makeStageDot(entry.stage,stageColors.get(String(entry.stage||'').trim())||'transparent')}${escaped(entry.time)}</div><div class="name">${escaped(entry.name)}</div><div class="genre">${escaped(entry.genre)}</div><div class="scoreRow"><div class="scoreLine"><div class="scoreNum gvalue" data-gscore="${entry.score}">${entry.score}</div><div class="scoreBar"><div class="scoreFill gFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div><div class="scoreLine"><input class="meInput meinput" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill" style="width:0%"></div></div></div></div>${entry.spotify?`<a class="spotify" href="${escaped(entry.spotify)}" target="_blank" rel="noopener" aria-label="Spotify">&#127911;</a>`:''}`;
+     const stage=String(entry.stage||'').trim(),stageColor=stageColors.get(stage);
+     if(stageColor) card.style.borderLeftColor=stageColor;
+     card.innerHTML=`<button class="fav" data-id="${id}">&#9734;</button><div class="time">${escaped(entry.time)}</div><div class="name">${escaped(entry.name)}</div><div class="genre">${escaped(entry.genre)}</div><div class="scoreRow"><div class="scoreLine"><div class="scoreNum gvalue" data-gscore="${entry.score}">${entry.score}</div><div class="scoreBar"><div class="scoreFill gFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div><div class="scoreLine"><input class="meInput meinput" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill" style="width:0%"></div></div></div></div>${entry.spotify?`<a class="spotify" href="${escaped(entry.spotify)}" target="_blank" rel="noopener" aria-label="Spotify">&#127911;</a>`:''}`;
      section.appendChild(card);bindImportedCard(card);
    });
  });
