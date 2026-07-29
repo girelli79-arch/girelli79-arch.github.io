@@ -13,7 +13,7 @@ header{background:#8b0000;padding:14px;text-align:center;font-size:1.5rem;font-w
 .card{background:#1d1d1d;border-left:5px solid #b71c1c;border-radius:10px;padding:12px;padding-right:130px;margin:10px 0;position:relative;transition:background .2s;scroll-margin-top:220px}
 .time{font-size:1.2rem;font-weight:bold;color:#81d4fa}
 .name{font-size:1.3rem;font-weight:bold;margin:6px 0}.card.favorite{background:#303030}.card.favorite .name{color:#ffd54f}
-.genre{color:#bbb}
+.genre{color:#bbb}.editable-genre{cursor:text;border-bottom:1px dashed #666;padding:3px 2px;margin:3px -2px;min-height:1.2em}.editable-genre:focus{outline:1px solid #81d4fa;border-bottom-color:#81d4fa;background:#202a30}
 .spotify{position:absolute;right:12px;bottom:12px;font-size:1.8rem;text-decoration:none}
 .fav{position:absolute;right:12px;top:10px;background:none;border:none;color:#ffd54f;font-size:1.7rem}
 
@@ -45,7 +45,7 @@ cursor:pointer;
 .scoreRow{position:absolute;top:42px;right:72px;width:70px;display:flex;flex-direction:column;gap:8px}
 .scoreLine{display:flex;align-items:center;gap:8px}
 .scoreNum{width:28px;font:700 calc(12px * var(--font-scale)) Arial,sans-serif;color:#fff;text-align:left}
-.scoreBar{flex:1;height:10px;background:#333;border-radius:5px;overflow:hidden}
+.scoreBar{flex:1;height:15px;background:#333;border-radius:5px;overflow:hidden}
 .scoreFill{height:100%;background:#f00}
 .meFill{background:#f00}
 .meInput{width:28px;background:#222;color:#fff;border:1px solid #555;border-radius:4px;font:700 calc(12px * var(--font-scale)) Arial,sans-serif;padding:0}
@@ -62,7 +62,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 <div class='header-actions'>
 <button class='reset-button' onclick='resetFavorites()' aria-label='Favoriten zurücksetzen' title='Favoriten zurücksetzen' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>↺</button>
 <div class='zoom-control'><button class='zoom-toggle' type='button' onclick='toggleZoomMenu()' aria-label='Schriftgröße ändern' title='Schriftgröße ändern'>🔍</button><div id='zoomMenu' class='zoom-menu'><label for='fontScale'>Schriftgröße <output id='fontScaleValue'>100%</output></label><input id='fontScale' type='range' min='70' max='160' step='5' value='100' oninput='updateFontScale(this.value)'><button type='button' onclick='updateFontScale(100)'>Auf 100% zurücksetzen</button></div></div>
-<div class='import-actions'><button class='import-toggle' type='button' onclick='toggleImportMenu()' aria-label='Festival importieren'>+</button><div id='importMenu' class='import-menu'><button type='button' onclick='openLocalImport()'>CSV-Import</button><button class='online-button' type='button' onclick='openOnlineFromImportMenu()'>Online</button></div></div>
+<div class='import-actions'><button class='import-toggle' type='button' onclick='toggleImportMenu()' aria-label='Festival importieren'>+</button><div id='importMenu' class='import-menu'><button class='csv-import-button' type='button' onclick='openLocalImport()'>CSV-Import</button><button class='online-button' type='button' onclick='openOnlineFromImportMenu()'>Online</button></div></div>
 <input id='scheduleFile' type='file' accept='.csv,text/csv' style='display:none'>
 <button class='now-button' onclick='jumpNow()' aria-label='Jetzt' title='Jetzt' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>◷</button>
 </div>
@@ -372,10 +372,11 @@ function showTab(id,b){document.querySelectorAll('.tabcontent').forEach(x=>x.sty
 const festivalStorageKey='csvFestivalLibrary_v2';
 let festivals=JSON.parse(localStorage.getItem(festivalStorageKey)||'{}');
 let activeFestivalId=localStorage.getItem('csvFestivalActive_v2')||null;
-let favs=[];let meScores={};
+let favs=[];let meScores={};let genreNotes={};
 function persistFestivals(){localStorage.setItem(festivalStorageKey,JSON.stringify(festivals));if(activeFestivalId)localStorage.setItem('csvFestivalActive_v2',activeFestivalId);}
 function save(){if(activeFestivalId&&festivals[activeFestivalId]){festivals[activeFestivalId].favs=favs;persistFestivals();}}
 function saveMeScores(){if(activeFestivalId&&festivals[activeFestivalId]){festivals[activeFestivalId].meScores=meScores;persistFestivals();}}
+function saveGenreNotes(){if(activeFestivalId&&festivals[activeFestivalId]){festivals[activeFestivalId].genreNotes=genreNotes;persistFestivals();}}
 document.querySelectorAll('.fav').forEach(btn=>{
  const id=btn.dataset.id;
  const card=btn.closest('.card');
@@ -491,7 +492,9 @@ function fitFestivalTitle(){
  const title=document.getElementById('festivalTitle');if(!title)return;
  title.style.fontSize='';let size=parseFloat(getComputedStyle(title).fontSize);
  while(title.scrollWidth>title.clientWidth&&size>7){size-=.5;title.style.fontSize=size+'px';}
+ syncImportFontSize();
 }
+function syncImportFontSize(){const title=document.getElementById('festivalTitle');if(!title)return;const size=getComputedStyle(title).fontSize;document.querySelectorAll('.import-menu button').forEach(button=>button.style.fontSize=size);}
 function setFestivalTitle(fileName){
   const title=fileName.replace(/\.[^.]+$/,'').trim()||'CSV importieren';
   document.getElementById('festivalTitle').textContent=title;
@@ -507,6 +510,8 @@ function bindImportedCard(card){
   if(meScores[id]!==undefined) inp.value=meScores[id];
   const update=()=>{let v=parseInt(inp.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(100,v));inp.value=v;meFill.style.width=v+'%';meFill.style.background=scoreColor(v);meScores[id]=v;saveMeScores();};
   update(); inp.addEventListener('change',update);inp.addEventListener('blur',update);inp.addEventListener('click',()=>inp.select());
+  const genre=card.querySelector('.genre');
+  if(genre){genre.classList.add('editable-genre');genre.contentEditable='true';genre.setAttribute('role','textbox');genre.setAttribute('aria-label','Genre und persönliche Notiz');genre.title='Antippen, um Genre oder Notiz zu bearbeiten';if(genreNotes[id]!==undefined)genre.textContent=genreNotes[id];genre.addEventListener('input',()=>{genreNotes[id]=genre.textContent;saveGenreNotes();});}
 }
 function renderFestivalMenu(){
  const menu=document.getElementById('festivalMenu');menu.innerHTML='';
@@ -551,7 +556,7 @@ async function loadOnlineFestival(item){
 function deleteFestival(id){
  const festival=festivals[id];if(!festival||!confirm('„'+festival.name+'“ wirklich löschen?'))return;
  delete festivals[id];
- if(activeFestivalId===id){activeFestivalId=null;favs=[];meScores={};localStorage.removeItem('csvFestivalActive_v2');document.querySelectorAll('.tabcontent').forEach(section=>section.innerHTML='<div class="favoritesBar"></div>');setFestivalTitle('CSV importieren');}
+ if(activeFestivalId===id){activeFestivalId=null;favs=[];meScores={};genreNotes={};localStorage.removeItem('csvFestivalActive_v2');document.querySelectorAll('.tabcontent').forEach(section=>section.innerHTML='<div class="favoritesBar"></div>');setFestivalTitle('CSV importieren');}
  persistFestivals();renderFestivalMenu();
 }
 function renderFestival(festival){
@@ -569,7 +574,7 @@ function renderFestival(festival){
 }
 function activateFestival(id){
  const festival=festivals[id];if(!festival)return;
- activeFestivalId=id;favs=festival.favs||[];meScores=festival.meScores||{};
+ activeFestivalId=id;favs=festival.favs||[];meScores=festival.meScores||{};genreNotes=festival.genreNotes||{};
  persistFestivals();setFestivalTitle(festival.name);renderFestival(festival);renderFestivalMenu();
 }
 function importSchedule(file){
@@ -595,7 +600,7 @@ function importSchedule(file){
    const name=file.name.replace(/\.[^.]+$/,'').trim()||'Unbenanntes Festival';
    const id=name.toLowerCase().replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-|-$/g,'')||'festival';
    const previous=festivals[id]||{};
-   festivals[id]={name,rows:schedule,favs:previous.favs||[],meScores:previous.meScores||{}};
+   festivals[id]={name,rows:schedule,favs:previous.favs||[],meScores:previous.meScores||{},genreNotes:previous.genreNotes||{}};
    activateFestival(id);
    alert(`${count} Bands importiert${skipped?`; ${skipped} Zeile(n) übersprungen`:''}.`);
  };
