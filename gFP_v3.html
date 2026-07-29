@@ -1,0 +1,627 @@
+<!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>
+<style>
+html{font-size:calc(16px * var(--font-scale,1))}body{margin:0;background:#111;color:#eee;font-family:Arial}button,input{font:inherit}:root{--font-scale:1;--tabs-top:56px;--content-top:120px;--favorites-top:104px}
+header{background:#8b0000;padding:14px;text-align:center;font-size:1.5rem;font-weight:bold;position:fixed;top:0;left:0;right:0;z-index:1000}
+.festival-title{font-size:1.3rem;background:none;border:0;color:#fff;font-weight:bold;cursor:pointer;padding:4px;text-align:left}
+.header-content{display:flex;justify-content:space-between;align-items:center;gap:8px}.header-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}.import-actions,.zoom-control{position:relative}.import-toggle,.zoom-toggle{background:#4caf50;color:#fff;border:none;border-radius:16px;padding:6px 13px;font-size:1.2rem;line-height:1;font-weight:bold;cursor:pointer}.zoom-toggle{background:#455a64}.import-menu,.zoom-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:1002;min-width:135px;padding:6px;background:#181818;border:1px solid #555;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.55)}.import-menu.open,.zoom-menu.open{display:flex;flex-direction:column;gap:5px}.import-menu button,.zoom-menu button{background:#333;color:#fff;border:0;border-radius:5px;padding:8px;white-space:nowrap;font-weight:bold;cursor:pointer}.import-menu .online-button{background:#1976d2}.zoom-menu{min-width:200px;text-align:left}.zoom-menu label{display:flex;justify-content:space-between;gap:8px;font-size:.9rem}.zoom-menu input{width:100%;accent-color:#81d4fa}.zoom-menu button{font-size:.85rem}
+.festival-menu{display:none;position:fixed;top:104px;left:8px;right:8px;z-index:1001;background:#181818;border:1px solid #555;border-radius:8px;padding:8px;box-shadow:0 4px 14px rgba(0,0,0,.55)}
+.festival-menu.open{display:block}.festival-choice{display:flex;gap:5px;margin:3px 0}.festival-menu button{display:block;width:100%;padding:9px 10px;background:#333;color:#fff;border:0;border-radius:5px;text-align:left;cursor:pointer}.festival-menu button.active{color:#ffd54f;background:#444}.festival-menu .delete-festival{width:auto;background:#7f1d1d;color:#fff;font-size:1.1rem;text-align:center}.festival-menu .empty,.festival-menu .loading,.festival-menu .error{color:#aaa;padding:8px}.festival-menu .error{color:#ffab91}.online-description{font-size:.85rem;color:#bbb;padding:3px 6px 8px}
+.tabs{display:flex;position:fixed;top:var(--tabs-top);left:0;right:0;background:#222;z-index:999;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.tabs button{flex:1;padding:12px;background:#222;color:#fff;border:0;font-size:1rem}
+.tabs button.active{background:#444}
+.tabcontent{padding:var(--content-top) 10px 10px}
+.card{background:#1d1d1d;border-left:5px solid #b71c1c;border-radius:10px;padding:12px;padding-right:130px;margin:10px 0;position:relative;transition:background .2s;scroll-margin-top:220px}
+.time{font-size:1.2rem;font-weight:bold;color:#81d4fa}
+.name{font-size:1.3rem;font-weight:bold;margin:6px 0}.card.favorite{background:#303030}.card.favorite .name{color:#ffd54f}
+.genre{color:#bbb}
+.spotify{position:absolute;right:12px;bottom:12px;font-size:1.8rem;text-decoration:none}
+.fav{position:absolute;right:12px;top:10px;background:none;border:none;color:#ffd54f;font-size:1.7rem}
+
+.favoritesBar{z-index:15;background:#111;
+position:fixed;
+top:var(--favorites-top);
+left:0;
+right:0;
+z-index:998;
+background:#181818;
+padding:6px;
+display:flex;
+gap:6px;
+overflow-x:auto;
+border-bottom:1px solid #444;
+}
+.favoritesBar:empty{display:none}
+.favChip{
+background:#333;
+color:#ffd54f;
+padding:4px 8px;
+border-radius:12px;
+white-space:nowrap;
+font-size:.9rem;
+cursor:pointer;
+}
+
+
+.scoreRow{position:absolute;top:42px;right:72px;width:70px;display:flex;flex-direction:column;gap:8px}
+.scoreLine{display:flex;align-items:center;gap:8px}
+.scoreNum{width:28px;font:700 calc(12px * var(--font-scale)) Arial,sans-serif;color:#fff;text-align:left}
+.scoreBar{flex:1;height:10px;background:#333;border-radius:5px;overflow:hidden}
+.scoreFill{height:100%;background:#f00}
+.meFill{background:#f00}
+.meInput{width:28px;background:#222;color:#fff;border:1px solid #555;border-radius:4px;font:700 calc(12px * var(--font-scale)) Arial,sans-serif;padding:0}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.meInput{appearance:textfield;-moz-appearance:textfield}
+.gscore{color:#9ecbff;font-weight:bold}
+.mescore,.gscore{display:flex;align-items:center;gap:4px}
+.mescore input{width:44px;background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:3px;text-align:center}
+@media (max-width:540px) and (orientation:portrait){:root{--tabs-top:86px;--content-top:142px;--favorites-top:130px}header{padding:7px 10px}.header-content{flex-direction:column;align-items:stretch;gap:5px}.festival-title{font-size:1.05rem;max-width:none;white-space:nowrap;overflow:visible;text-overflow:clip}.header-actions{justify-content:flex-end;gap:4px!important;width:100%}.header-actions>button{padding:6px 8px!important;font-size:.85rem}.import-toggle,.zoom-toggle{padding:6px 11px!important;font-size:1.1rem!important}.tabs button{min-height:44px;padding:10px 8px;font-size:1rem;font-weight:bold}.festival-menu{top:130px}}
+
+</style></head><body>
+<header><div class='header-content'>
+<button id='festivalTitle' class='festival-title' type='button' onclick='toggleFestivalMenu()'>CSV importieren</button>
+<div class='header-actions'>
+<button onclick='resetFavorites()' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Reset</button>
+<div class='zoom-control'><button class='zoom-toggle' type='button' onclick='toggleZoomMenu()' aria-label='Schriftgröße ändern' title='Schriftgröße ändern'>🔍</button><div id='zoomMenu' class='zoom-menu'><label for='fontScale'>Schriftgröße <output id='fontScaleValue'>100%</output></label><input id='fontScale' type='range' min='70' max='160' step='5' value='100' oninput='updateFontScale(this.value)'><button type='button' onclick='updateFontScale(100)'>Auf 100% zurücksetzen</button></div></div>
+<div class='import-actions'><button class='import-toggle' type='button' onclick='toggleImportMenu()' aria-label='Festival importieren'>+</button><div id='importMenu' class='import-menu'><button type='button' onclick='openLocalImport()'>CSV-Import</button><button class='online-button' type='button' onclick='openOnlineFromImportMenu()'>Online</button></div></div>
+<input id='scheduleFile' type='file' accept='.csv,text/csv' style='display:none'>
+<button onclick='jumpNow()' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Jetzt</button>
+</div>
+</div></header><div id='festivalMenu' class='festival-menu' aria-label='Gespeicherte Festivals'></div><div id='onlineMenu' class='festival-menu' aria-label='Online-Festivals'></div>
+<div class='tabs'>
+<button class='active' onclick="showTab('Do',this)">Do</button>
+<button onclick="showTab('Fr',this)">Fr</button>
+<button onclick="showTab('Sa',this)">Sa</button>
+</div>
+<section id='Do' class='tabcontent' style='display:block'><div class='favoritesBar'></div><div class='card'>
+<button class='fav' data-id='Do-0'>☆</button>
+<div class='time'>13:45–14:30</div>
+<div class='name'>Sarcator</div>
+<div class='genre'>Blackened Thrash Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Sarcator%20Ascend' target='_blank' aria-label='Spotify'>🎧</a>
+</div>
+<div class='card'><button class='fav' data-id='Do-1'>☆</button><div class='time'>14:45–15:30</div><div class='name'>200 Stab Wounds</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/track/4h5TPn29GHMLZIrnZL0XRS' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-2'>☆</button><div class='time'>15:20–15:55</div><div class='name'>Morbus Dei</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Morbus%20Dei%20The%20World%20Left%20Behind' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-3'>☆</button><div class='time'>15:45–16:30</div><div class='name'>IOTUNN</div><div class='genre'>Progressive Melodic Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/track/50WwHosxkj26BfmWN2Db1X' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-4'>☆</button><div class='time'>16:20–16:55</div><div class='name'>Rats of Gomorrah</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Rats%20of%20Gomorrah%20Swarming%20Death' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-5'>☆</button><div class='time'>16:45–17:30</div><div class='name'>Misery Index</div><div class='genre'>Death Metal / Grindcore</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Misery%20Index%20The%20Carrion%20Call' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-6'>☆</button><div class='time'>17:20–17:55</div><div class='name'>Messticator</div><div class='genre'>Death / Thrash Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Messticator%20The%20Tyrants%20Scepter' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-7'>☆</button><div class='time'>17:45–18:30</div><div class='name'>Sadistic Intent</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Sadistic%20Intent%20Ritual%20Sacrifice' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-8'>☆</button><div class='time'>18:25–19:00</div><div class='name'>TodoMal</div><div class='genre'>Atmospheric Doom Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/TodoMal%20Antichrist%20of%20Love' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-9'>☆</button><div class='time'>18:50–19:35</div><div class='name'>Schirenc plays Pungent Stench</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Pungent%20Stench%20Viva%20la%20Muerte' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-10'>☆</button><div class='time'>19:30–20:05</div><div class='name'>Begging for Incest</div><div class='genre'>Slam / Brutal Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Begging%20for%20Incest%20Torment' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-11'>☆</button><div class='time'>19:55–20:40</div><div class='name'>Desaster</div><div class='genre'>Black / Thrash Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Desaster%20Satans%20Soldiers%20Syndicate' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-12'>☆</button><div class='time'>20:35–21:10</div><div class='name'>Evoken</div><div class='genre'>Funeral Doom / Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Evoken%20Antithesis%20of%20Light' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-13'>☆</button><div class='time'>21:00–22:00</div><div class='name'>Sventevith</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Behemoth%20Sventevith%20Storming%20Near%20the%20Baltic' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-14'>☆</button><div class='time'>21:50–22:30</div><div class='name'>Sear Bliss</div><div class='genre'>Atmospheric Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Sear%20Bliss%20The%20Haunting' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-15'>☆</button><div class='time'>22:20–23:20</div><div class='name'>Moonspell</div><div class='genre'>Gothic Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Moonspell%20Alma%20Mater' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Do-16'>☆</button><div class='time'>23:45–01:00</div><div class='name'>Testament</div><div class='genre'>Thrash Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Testament%20Over%20the%20Wall' target='_blank' aria-label='Spotify'>🎧</a></div></section><section id='Fr' class='tabcontent' style='display:none'><div class='favoritesBar'></div><div class='card'><button class='fav' data-id='Fr-0'>☆</button><div class='time'>12:00–12:30</div><div class='name'>Guttural Slug</div><div class='genre'>Slam / Brutal Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Guttural%20Slug%20Megachthon' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-1'>☆</button><div class='time'>12:45–13:30</div><div class='name'>A Canorous Quintet</div><div class='genre'>Melodic Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/A%20Canorous%20Quintet%20The%20Time%20of%20Autumn' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-2'>☆</button><div class='time'>13:45–14:30</div><div class='name'>Wormed</div><div class='genre'>Brutal Technical Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Wormed%20Tautochrone' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-3'>☆</button><div class='time'>14:45–15:30</div><div class='name'>Sorcerer</div><div class='genre'>Epic Doom Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Sorcerer%20The%20Sorcerer' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-4'>☆</button><div class='time'>15:20–15:55</div><div class='name'>Nail by Nail</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Nail%20by%20Nail%20Embraced%20by%20the%20Black' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-5'>☆</button><div class='time'>15:45–16:30</div><div class='name'>Jungle Rot</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Jungle%20Rot%20Jugular' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-6'>☆</button><div class='time'>16:20–16:55</div><div class='name'>Endonomos</div><div class='genre'>Doom / Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Endonomos%20The%20Last%20Dying%20Breath' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-7'>☆</button><div class='time'>16:45–17:30</div><div class='name'>Afsky</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Afsky%20Tyende%20Sang' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-8'>☆</button><div class='time'>17:20–17:55</div><div class='name'>Crawl</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Crawl%20This%20Sad%20Cadavr' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-9'>☆</button><div class='time'>17:45–18:30</div><div class='name'>Deceased</div><div class='genre'>Death / Thrash / Heavy Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Deceased%20The%20Silent%20Creature' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-10'>☆</button><div class='time'>18:25–19:00</div><div class='name'>Death Worship</div><div class='genre'>Black / Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Death%20Worship%20End%20Times' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-11'>☆</button><div class='time'>18:50–19:35</div><div class='name'>Wolves in the Throne Room</div><div class='genre'>Atmospheric Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Wolves%20in%20the%20Throne%20Room%20I%20Will%20Lay%20Down%20My%20Bones' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-12'>☆</button><div class='time'>19:30–20:05</div><div class='name'>Lucifer's Child</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Lucifers%20Child%20The%20Order' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-13'>☆</button><div class='time'>19:55–20:40</div><div class='name'>Sacred Reich</div><div class='genre'>Thrash Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Sacred%20Reich%20Surf%20Nicaragua' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-14'>☆</button><div class='time'>20:35–21:10</div><div class='name'>Asagraum</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Asagraum%20General%20Surgeon%20Black%20Love' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-15'>☆</button><div class='time'>21:00–22:00</div><div class='name'>Alcest</div><div class='genre'>Post-Black Metal / Shoegaze</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Alcest%20Autre%20Temps' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-16'>☆</button><div class='time'>21:50–22:30</div><div class='name'>Fleshcrawl</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Fleshcrawl%20Bloodred%20Massacre' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-17'>☆</button><div class='time'>22:20–23:20</div><div class='name'>Dark Funeral</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Dark%20Funeral%20My%20Dark%20Desires' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Fr-18'>☆</button><div class='time'>23:45–01:00</div><div class='name'>Amorphis</div><div class='genre'>Melodic Death / Progressive Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Amorphis%20Black%20Winter%20Day' target='_blank' aria-label='Spotify'>🎧</a></div></section><section id='Sa' class='tabcontent' style='display:none'><div class='favoritesBar'></div><div class='card'><button class='fav' data-id='Sa-0'>☆</button><div class='time'>10:00–10:45</div><div class='name'>Gorefunest</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Gorefest%20Erase' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-1'>☆</button><div class='time'>11:00–12:00</div><div class='name'>For Victory</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Bolt%20Thrower%20For%20Victory' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-2'>☆</button><div class='time'>12:00–12:30</div><div class='name'>Gut</div><div class='genre'>Goregrind / Grindcore</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Gut%20Odour%20of%20Torture' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-3'>☆</button><div class='time'>12:45–13:30</div><div class='name'>Gates of Ishtar</div><div class='genre'>Melodic Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Gates%20of%20Ishtar%20The%20Dawn%20of%20Flames' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-4'>☆</button><div class='time'>13:45–14:30</div><div class='name'>Internal Bleeding</div><div class='genre'>Slam / Brutal Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Internal%20Bleeding%20Voracious%20Contempt' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-5'>☆</button><div class='time'>14:45–15:30</div><div class='name'>Hexvessel</div><div class='genre'>Psychedelic Folk / Post-Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Hexvessel%20When%20We%20Are%20Death' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-6'>☆</button><div class='time'>15:20–15:55</div><div class='name'>Baxaxaxa</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Baxaxaxa%20The%20Old%20Evil' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-7'>☆</button><div class='time'>15:45–16:30</div><div class='name'>Acranius</div><div class='genre'>Slam / Brutal Deathcore</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Acranius%20Rule%20of%20Seven' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-8'>☆</button><div class='time'>16:20–16:55</div><div class='name'>Bloody Vengeance</div><div class='genre'>Thrash / Death / Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Bloody%20Vengeance%20In%20the%20Name%20of%20Blood' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-9'>☆</button><div class='time'>16:45–17:30</div><div class='name'>In the Woods...</div><div class='genre'>Black / Gothic / Progressive Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/In%20the%20Woods%20Heart%20of%20the%20Ages' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-10'>☆</button><div class='time'>17:20–17:55</div><div class='name'>Temple of Dread</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Temple%20of%20Dread%20God%20of%20the%20Godless' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-11'>☆</button><div class='time'>17:45–18:30</div><div class='name'>Firespawn</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Firespawn%20The%20Emperor' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-12'>☆</button><div class='time'>18:25–19:00</div><div class='name'>Impurity</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Impurity%20Into%20the%20Depths%20of%20Hell' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-13'>☆</button><div class='time'>18:50–19:35</div><div class='name'>Groza</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Groza%20Nil' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-14'>☆</button><div class='time'>19:30–20:05</div><div class='name'>Celeste</div><div class='genre'>Blackened Sludge / Post-Hardcore</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Celeste%20Elle%20se%20repete%20froidement' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-15'>☆</button><div class='time'>19:55–20:40</div><div class='name'>Murder Squad</div><div class='genre'>Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Murder%20Squad%20Unspeakable' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-16'>☆</button><div class='time'>20:35–21:10</div><div class='name'>Sunken</div><div class='genre'>Atmospheric Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Sunken%20Ensomhed' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-17'>☆</button><div class='time'>21:00–22:00</div><div class='name'>Wolfbrigade</div><div class='genre'>Crust Punk / D-Beat</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Wolfbrigade%20A%20Day%20to%20Die' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-18'>☆</button><div class='time'>21:50–22:30</div><div class='name'>Tulus</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Tulus%20Evil%201999' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-19'>☆</button><div class='time'>22:20–23:20</div><div class='name'>Marduk</div><div class='genre'>Black Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Marduk%20Panzer%20Division%20Marduk' target='_blank' aria-label='Spotify'>🎧</a></div><div class='card'><button class='fav' data-id='Sa-20'>☆</button><div class='time'>23:45–01:00</div><div class='name'>Hypocrisy</div><div class='genre'>Melodic Death Metal</div>
+<div class='scoreRow'>
+<div class='scoreLine'><div class='scoreNum gvalue' data-gscore='0'>0</div><div class='scoreBar'><div class='scoreFill gFill' style='width:0%'></div></div></div>
+<div class='scoreLine'><input class='meInput meinput' type='text' inputmode='numeric' pattern='[0-9]*' value='0'><div class='scoreBar'><div class='scoreFill meFill' style='width:0%'></div></div></div>
+</div>
+<a class='spotify' href='https://open.spotify.com/search/Hypocrisy%20Eraser' target='_blank' aria-label='Spotify'>🎧</a></div></section>
+<script>
+// Die HTML-Datei startet ohne Zeitplan. Karten werden ausschließlich per CSV-Import erzeugt.
+document.querySelectorAll('.tabcontent .card').forEach(card=>card.remove());
+
+function showTab(id,b){document.querySelectorAll('.tabcontent').forEach(x=>x.style.display='none');document.getElementById(id).style.display='block';document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');}
+const festivalStorageKey='csvFestivalLibrary_v2';
+let festivals=JSON.parse(localStorage.getItem(festivalStorageKey)||'{}');
+let activeFestivalId=localStorage.getItem('csvFestivalActive_v2')||null;
+let favs=[];let meScores={};
+function persistFestivals(){localStorage.setItem(festivalStorageKey,JSON.stringify(festivals));if(activeFestivalId)localStorage.setItem('csvFestivalActive_v2',activeFestivalId);}
+function save(){if(activeFestivalId&&festivals[activeFestivalId]){festivals[activeFestivalId].favs=favs;persistFestivals();}}
+function saveMeScores(){if(activeFestivalId&&festivals[activeFestivalId]){festivals[activeFestivalId].meScores=meScores;persistFestivals();}}
+document.querySelectorAll('.fav').forEach(btn=>{
+ const id=btn.dataset.id;
+ const card=btn.closest('.card');
+ const draw=()=>{
+   const on=favs.includes(id);
+   btn.textContent=on?'★':'☆';
+   card.classList.toggle('favorite',on);
+ };
+ draw();
+ btn.onclick=()=>{
+   if(favs.includes(id)) favs=favs.filter(x=>x!==id);
+   else favs.push(id);
+   save();
+   draw();
+   refreshFavoriteBars();
+ };
+});
+
+function resetFavorites(){
+  if(!confirm('Alle Favoriten zurücksetzen?')) return;
+  favs=[];
+  save();
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('favorite'));
+  document.querySelectorAll('.fav').forEach(btn=>btn.textContent='☆');
+  if(typeof refreshFavoriteBars==='function') refreshFavoriteBars();
+}
+
+function jumpNow(){
+const d=new Date();const map={4:'Do',5:'Fr',6:'Sa'};const day=map[d.getDay()];if(!day){alert('Heute ist kein Festivaltag.');return;}
+let cur=d.getHours()*60+d.getMinutes();const sec=document.getElementById(day);let target=null;
+for(const c of sec.querySelectorAll('.card')){
+ const m=c.querySelector('.time').textContent.match(/(\d\d):(\d\d).*(\d\d):(\d\d)/);if(!m)continue;
+ let s=(+m[1])*60+(+m[2]),e=(+m[3])*60+(+m[4]);if(e<s)e+=1440;let cc=cur;if(cc<s&&e>1440)cc+=1440;
+ if(cc>=s&&cc<=e){target=c;break;}
+}
+const idx=day==='Do'?1:day==='Fr'?2:3;showTab(day,document.querySelector('.tabs button:nth-child('+idx+')'));
+if(target)setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),50);else alert('Aktuell spielt laut Zeitplan keine Band.');
+}
+
+function refreshFavoriteBars(){
+ document.querySelectorAll('.favoritesBar').forEach(bar=>bar.innerHTML='');
+ document.querySelectorAll('.card.favorite').forEach(card=>{
+   const bar=card.parentElement.querySelector('.favoritesBar');
+   const chip=document.createElement('div');
+   chip.className='favChip';
+   chip.textContent=card.querySelector('.name').textContent;
+   chip.onclick=()=>card.scrollIntoView({behavior:'smooth',block:'start',inline:'nearest'});
+   bar.appendChild(chip);
+ });
+}
+refreshFavoriteBars();
+
+
+// Die persönlichen Scores werden je importiertem Festival gespeichert.
+document.querySelectorAll('.card').forEach((card,idx)=>{
+  const id=card.querySelector('.fav').dataset.id;
+  const inp=card.querySelector('.meinput');
+  if(meScores[id]!==undefined) inp.value=meScores[id];
+  inp.onchange=()=>{
+    let v=parseInt(inp.value||0,10);
+    if(isNaN(v)) v=0;
+    v=Math.max(0,Math.min(100,v));
+    inp.value=v;
+    meScores[id]=v;
+    saveMeScores();
+  };
+});
+
+
+document.querySelectorAll('.card').forEach(card=>{
+ const inp=card.querySelector('.meinput');
+ const fill=card.querySelector('.meFill');
+ const id=card.querySelector('.fav').dataset.id;
+ if(meScores[id]!==undefined){inp.value=meScores[id];fill.style.width=meScores[id]+'%';}
+ function upd(){
+  let v=parseInt(inp.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(100,v));
+  inp.value=v;fill.style.width=v+'%';meScores[id]=v;
+  saveMeScores();
+ }
+ inp.addEventListener('change',upd);
+ inp.addEventListener('blur',upd);
+ inp.addEventListener('click',()=>inp.select());
+});
+
+
+function parseCSV(text){
+  const firstLine=text.replace(/^\uFEFF/,'').split(/\r?\n/,1)[0];
+  const delimiter=firstLine.includes(';')&&!firstLine.includes(',')?';':',';
+  const rows=[];let row=[],cell='',quoted=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],next=text[i+1];
+    if(ch==='"'&&quoted&&next==='"'){cell+='"';i++;}
+    else if(ch==='"'){quoted=!quoted;}
+    else if(ch===delimiter&&!quoted){row.push(cell.trim());cell='';}
+    else if((ch==='\n'||ch==='\r')&&!quoted){
+      if(ch==='\r'&&next==='\n') i++;
+      row.push(cell.trim()); if(row.some(value=>value!=='')) rows.push(row); row=[];cell='';
+    } else cell+=ch;
+  }
+  row.push(cell.trim());if(row.some(value=>value!=='')) rows.push(row);
+  return rows;
+}
+function normalizeHeader(value){return value.replace(/^\uFEFF/,'').toLowerCase().trim().replace(/[ _-]/g,'');}
+function dayId(value){
+  const key=value.toLowerCase().trim();
+  if(/^(do|donnerstag|thu|thursday)/.test(key)) return 'Do';
+  if(/^(fr|freitag|fri|friday)/.test(key)) return 'Fr';
+  if(/^(sa|samstag|sat|saturday)/.test(key)) return 'Sa';
+  return null;
+}
+function escaped(value){const div=document.createElement('div');div.textContent=value||'';return div.innerHTML;}
+function setFestivalTitle(fileName){
+  const title=fileName.replace(/\.[^.]+$/,'').trim()||'CSV importieren';
+  document.getElementById('festivalTitle').textContent=title;
+}
+function bindImportedCard(card){
+  const id=card.querySelector('.fav').dataset.id;
+  const fav=card.querySelector('.fav');
+  const draw=()=>{const on=favs.includes(id);fav.textContent=on?'★':'☆';card.classList.toggle('favorite',on);};
+  draw();
+  fav.onclick=()=>{favs=favs.includes(id)?favs.filter(x=>x!==id):[...favs,id];save();draw();refreshFavoriteBars();};
+  const inp=card.querySelector('.meinput'),meFill=card.querySelector('.meFill');
+  if(meScores[id]!==undefined) inp.value=meScores[id];
+  const update=()=>{let v=parseInt(inp.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(100,v));inp.value=v;meFill.style.width=v+'%';meFill.style.background=scoreColor(v);meScores[id]=v;saveMeScores();};
+  update(); inp.addEventListener('change',update);inp.addEventListener('blur',update);inp.addEventListener('click',()=>inp.select());
+}
+function renderFestivalMenu(){
+ const menu=document.getElementById('festivalMenu');menu.innerHTML='';
+ const entries=Object.entries(festivals).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+ if(!entries.length){menu.innerHTML='<div class="empty">Noch kein Festival importiert.</div>';return;}
+ entries.forEach(([id,festival])=>{const row=document.createElement('div');row.className='festival-choice';const button=document.createElement('button');button.textContent=festival.name;button.classList.toggle('active',id===activeFestivalId);button.onclick=()=>{activateFestival(id);menu.classList.remove('open');};const remove=document.createElement('button');remove.className='delete-festival';remove.type='button';remove.title='Festival löschen';remove.setAttribute('aria-label',festival.name+' löschen');remove.textContent='🗑';remove.onclick=()=>deleteFestival(id);row.append(button,remove);menu.appendChild(row);});
+}
+function applyFontScale(percent){const value=Math.max(70,Math.min(160,Number(percent)||100));document.documentElement.style.setProperty('--font-scale',value/100);const slider=document.getElementById('fontScale'),label=document.getElementById('fontScaleValue');if(slider)slider.value=value;if(label)label.textContent=value+'%';localStorage.setItem('gfpFontScale',String(value));}
+function updateFontScale(percent){applyFontScale(percent);}
+function toggleZoomMenu(){document.getElementById('festivalMenu').classList.remove('open');document.getElementById('onlineMenu').classList.remove('open');document.getElementById('importMenu').classList.remove('open');document.getElementById('zoomMenu').classList.toggle('open');}
+function toggleImportMenu(){document.getElementById('festivalMenu').classList.remove('open');document.getElementById('onlineMenu').classList.remove('open');document.getElementById('zoomMenu').classList.remove('open');document.getElementById('importMenu').classList.toggle('open');}
+function openLocalImport(){document.getElementById('importMenu').classList.remove('open');document.getElementById('scheduleFile').click();}
+function openOnlineFromImportMenu(){document.getElementById('importMenu').classList.remove('open');openOnlineMenu();}
+function toggleFestivalMenu(){document.getElementById('importMenu').classList.remove('open');document.getElementById('zoomMenu').classList.remove('open');const menu=document.getElementById('festivalMenu');renderFestivalMenu();menu.classList.toggle('open');}
+async function openOnlineMenu(){
+ const localMenu=document.getElementById('festivalMenu'),menu=document.getElementById('onlineMenu');
+ localMenu.classList.remove('open');document.getElementById('importMenu').classList.remove('open');document.getElementById('zoomMenu').classList.remove('open');
+ if(menu.classList.contains('open')){menu.classList.remove('open');return;}
+ menu.innerHTML='<div class="loading">Online-Festivals werden geladen …</div>';menu.classList.add('open');
+ try{
+   const response=await fetch('csv/index.json',{cache:'no-store'});
+   if(!response.ok) throw new Error('Liste nicht gefunden');
+   const items=await response.json();
+   if(!Array.isArray(items)||!items.length){menu.innerHTML='<div class="empty">Noch keine Online-Festivals verfügbar.</div>';return;}
+   menu.innerHTML='<div class="online-description">Festival auswählen und direkt importieren</div>';
+   items.forEach(item=>{
+     if(!item||typeof item.file!=='string') return;
+     const button=document.createElement('button');button.textContent='☁ '+(item.name||item.file.replace(/\.csv$/i,''));
+     button.onclick=()=>loadOnlineFestival(item);menu.appendChild(button);
+   });
+ }catch(error){menu.innerHTML='<div class="error">Online-Liste konnte nicht geladen werden. Prüfe, ob csv/index.json auf GitHub Pages veröffentlicht ist.</div>';}
+}
+async function loadOnlineFestival(item){
+ const menu=document.getElementById('onlineMenu');menu.innerHTML='<div class="loading">Festival wird importiert …</div>';
+ try{
+   const response=await fetch('csv/'+item.file.split('/').map(encodeURIComponent).join('/'),{cache:'no-store'});
+   if(!response.ok) throw new Error('CSV nicht gefunden');
+   const text=await response.text();
+   importSchedule(new File([text],item.file,{type:'text/csv'}));menu.classList.remove('open');
+ }catch(error){menu.innerHTML='<div class="error">CSV konnte nicht geladen werden.</div>';}
+}
+function deleteFestival(id){
+ const festival=festivals[id];if(!festival||!confirm('„'+festival.name+'“ wirklich löschen?'))return;
+ delete festivals[id];
+ if(activeFestivalId===id){activeFestivalId=null;favs=[];meScores={};localStorage.removeItem('csvFestivalActive_v2');document.querySelectorAll('.tabcontent').forEach(section=>section.innerHTML='<div class="favoritesBar"></div>');setFestivalTitle('CSV importieren');}
+ persistFestivals();renderFestivalMenu();
+}
+function renderFestival(festival){
+ const groups={Do:[],Fr:[],Sa:[]};festival.rows.forEach(entry=>groups[entry.day].push(entry));
+ Object.entries(groups).forEach(([day,entries])=>{
+   const section=document.getElementById(day);section.innerHTML='<div class="favoritesBar"></div>';
+   entries.forEach((entry,index)=>{
+     const id=`${day}-${index}`;
+     const card=document.createElement('div');card.className='card';
+     card.innerHTML=`<button class="fav" data-id="${id}">☆</button><div class="time">${escaped(entry.time)}</div><div class="name">${escaped(entry.name)}</div><div class="genre">${escaped(entry.genre)}</div><div class="scoreRow"><div class="scoreLine"><div class="scoreNum gvalue" data-gscore="${entry.score}">${entry.score}</div><div class="scoreBar"><div class="scoreFill gFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div><div class="scoreLine"><input class="meInput meinput" type="text" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill" style="width:0%"></div></div></div></div>${entry.spotify?`<a class="spotify" href="${escaped(entry.spotify)}" target="_blank" rel="noopener" aria-label="Spotify">🎧</a>`:''}`;
+     section.appendChild(card);bindImportedCard(card);
+   });
+ });
+ refreshFavoriteBars();
+}
+function activateFestival(id){
+ const festival=festivals[id];if(!festival)return;
+ activeFestivalId=id;favs=festival.favs||[];meScores=festival.meScores||{};
+ persistFestivals();setFestivalTitle(festival.name);renderFestival(festival);renderFestivalMenu();
+}
+function importSchedule(file){
+ const reader=new FileReader();
+ reader.onload=e=>{
+   const rows=parseCSV(e.target.result);
+   if(rows.length<2){alert('Die CSV enthält keine Datenzeilen.');return;}
+   const header=rows[0].map(normalizeHeader);
+   const required=['tage','zeiten','bandname','genre','spotifylink','gscore'];
+   const missing=required.filter(name=>!header.includes(name));
+   if(missing.length){alert('CSV-Kopfzeile unvollständig. Erwartet: tage, zeiten, bandname, genre, spotify-link, gscore');return;}
+   const col=Object.fromEntries(header.map((name,index)=>[name,index]));
+   const schedule=[];let skipped=0;
+   rows.slice(1).forEach(values=>{
+     const day=dayId(values[col.tage]||'');
+     const name=(values[col.bandname]||'').trim();
+     if(!day||!name){skipped++;return;}
+     const score=Math.max(0,Math.min(100,parseInt(values[col.gscore],10)||0));
+     schedule.push({day,time:values[col.zeiten]||'',name,genre:values[col.genre]||'',spotify:values[col.spotifylink]||'',score});
+   });
+   const count=schedule.length;
+   if(!count){alert('Keine gültigen Zeilen gefunden. Bei „tage“ sind Do/Fr/Sa oder die deutschen Tagesnamen zulässig.');return;}
+   const name=file.name.replace(/\.[^.]+$/,'').trim()||'Unbenanntes Festival';
+   const id=name.toLowerCase().replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-|-$/g,'')||'festival';
+   const previous=festivals[id]||{};
+   festivals[id]={name,rows:schedule,favs:previous.favs||[],meScores:previous.meScores||{}};
+   activateFestival(id);
+   alert(`${count} Bands importiert${skipped?`; ${skipped} Zeile(n) übersprungen`:''}.`);
+ };
+ reader.readAsText(file,'UTF-8');
+}
+document.getElementById('scheduleFile').addEventListener('change',function(){if(this.files.length) importSchedule(this.files[0]);this.value='';});
+applyFontScale(localStorage.getItem('gfpFontScale')||100);
+if(activeFestivalId&&festivals[activeFestivalId]) activateFestival(activeFestivalId);
+else renderFestivalMenu();
+
+
+function scoreColor(v){
+  v=Math.max(0,Math.min(100,Number(v)||0));
+  const hue=v*1.2; // 0=rot, 120=grün
+  return `hsl(${hue}, 85%, 45%)`;
+}
+document.querySelectorAll('.card').forEach(card=>{
+  const gv=card.querySelector('.gvalue');
+  const gf=card.querySelector('.gFill');
+  if(gv&&gf){
+    gf.style.background=scoreColor(parseInt(gv.textContent,10));
+  }
+  const inp=card.querySelector('.meinput');
+  const mf=card.querySelector('.meFill');
+  if(inp&&mf){
+    const update=()=>{
+      mf.style.background=scoreColor(parseInt(inp.value,10));
+    };
+    update();
+    inp.addEventListener('change',update);
+    inp.addEventListener('blur',update);
+  }
+});
+
+</script></body></html>
