@@ -1,14 +1,15 @@
 <!doctype html><html lang=de><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>
 <style>
-body{margin:0;background:#111;color:#eee;font-family:Arial}
+body{margin:0;background:#111;color:#eee;font-family:Arial}:root{--tabs-top:56px;--content-top:120px;--favorites-top:104px}
 header{background:#8b0000;padding:14px;text-align:center;font-size:1.5rem;font-weight:bold;position:fixed;top:0;left:0;right:0;z-index:1000}
 .festival-title{font-size:1.3rem;background:none;border:0;color:#fff;font-weight:bold;cursor:pointer;padding:4px;text-align:left}
+.header-content{display:flex;justify-content:space-between;align-items:center;gap:8px}.header-actions{display:flex;gap:8px;align-items:center;flex:0 0 auto}.import-actions{position:relative}.import-toggle{background:#4caf50;color:#fff;border:none;border-radius:16px;padding:6px 13px;font-size:1.2rem;line-height:1;font-weight:bold;cursor:pointer}.import-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:1002;min-width:135px;padding:6px;background:#181818;border:1px solid #555;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.55)}.import-menu.open{display:flex;flex-direction:column;gap:5px}.import-menu button{background:#333;color:#fff;border:0;border-radius:5px;padding:8px;white-space:nowrap;font-weight:bold;cursor:pointer}.import-menu .online-button{background:#1976d2}
 .festival-menu{display:none;position:fixed;top:104px;left:8px;right:8px;z-index:1001;background:#181818;border:1px solid #555;border-radius:8px;padding:8px;box-shadow:0 4px 14px rgba(0,0,0,.55)}
 .festival-menu.open{display:block}.festival-choice{display:flex;gap:5px;margin:3px 0}.festival-menu button{display:block;width:100%;padding:9px 10px;background:#333;color:#fff;border:0;border-radius:5px;text-align:left;cursor:pointer}.festival-menu button.active{color:#ffd54f;background:#444}.festival-menu .delete-festival{width:auto;background:#7f1d1d;color:#fff;font-size:1.1rem;text-align:center}.festival-menu .empty,.festival-menu .loading,.festival-menu .error{color:#aaa;padding:8px}.festival-menu .error{color:#ffab91}.online-description{font-size:.85rem;color:#bbb;padding:3px 6px 8px}
-.tabs{display:flex;position:fixed;top:56px;left:0;right:0;background:#222;z-index:999;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.tabs{display:flex;position:fixed;top:var(--tabs-top);left:0;right:0;background:#222;z-index:999;box-shadow:0 2px 6px rgba(0,0,0,.5)}
 .tabs button{flex:1;padding:12px;background:#222;color:#fff;border:0;font-size:1rem}
 .tabs button.active{background:#444}
-.tabcontent{padding:120px 10px 10px}
+.tabcontent{padding:var(--content-top) 10px 10px}
 .card{background:#1d1d1d;border-left:5px solid #b71c1c;border-radius:10px;padding:12px;padding-right:130px;margin:10px 0;position:relative;transition:background .2s;scroll-margin-top:220px}
 .time{font-size:1.2rem;font-weight:bold;color:#81d4fa}
 .name{font-size:1.3rem;font-weight:bold;margin:6px 0}.card.favorite{background:#303030}.card.favorite .name{color:#ffd54f}
@@ -18,7 +19,7 @@ header{background:#8b0000;padding:14px;text-align:center;font-size:1.5rem;font-w
 
 .favoritesBar{z-index:15;background:#111;
 position:fixed;
-top:104px;
+top:var(--favorites-top);
 left:0;
 right:0;
 z-index:998;
@@ -53,14 +54,14 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .gscore{color:#9ecbff;font-weight:bold}
 .mescore,.gscore{display:flex;align-items:center;gap:4px}
 .mescore input{width:44px;background:#222;color:#fff;border:1px solid #555;border-radius:6px;padding:3px;text-align:center}
+@media (max-width:540px){:root{--tabs-top:48px;--content-top:104px;--favorites-top:92px}header{padding:8px}.header-content{gap:4px}.festival-title{font-size:1.05rem;min-width:0;max-width:145px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header-actions{gap:4px!important}.header-actions>button{padding:6px 8px!important;font-size:.85rem}.import-toggle{padding:6px 11px!important;font-size:1.1rem!important}.tabs button{min-height:44px;padding:10px 8px;font-size:1rem;font-weight:bold}.festival-menu{top:92px}}
 
 </style></head><body>
-<header><div style='display:flex;justify-content:space-between;align-items:center'>
+<header><div class='header-content'>
 <button id='festivalTitle' class='festival-title' type='button' onclick='toggleFestivalMenu()'>🤘 CSV importieren</button>
-<div style='display:flex;gap:8px'>
+<div class='header-actions'>
 <button onclick='resetFavorites()' style='background:#666;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Reset</button>
-<button onclick='document.getElementById("scheduleFile").click()' style='background:#4caf50;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>CSV-Import</button>
-<button onclick='openOnlineMenu()' style='background:#1976d2;color:#fff;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Online</button>
+<div class='import-actions'><button class='import-toggle' type='button' onclick='toggleImportMenu()' aria-label='Festival importieren'>+</button><div id='importMenu' class='import-menu'><button type='button' onclick='openLocalImport()'>CSV-Import</button><button class='online-button' type='button' onclick='openOnlineFromImportMenu()'>Online</button></div></div>
 <input id='scheduleFile' type='file' accept='.csv,text/csv' style='display:none'>
 <button onclick='jumpNow()' style='background:#ffd54f;border:none;border-radius:16px;padding:6px 12px;font-weight:bold'>Jetzt</button>
 </div>
@@ -506,10 +507,13 @@ function renderFestivalMenu(){
  if(!entries.length){menu.innerHTML='<div class="empty">Noch kein Festival importiert.</div>';return;}
  entries.forEach(([id,festival])=>{const row=document.createElement('div');row.className='festival-choice';const button=document.createElement('button');button.textContent='🤘 '+festival.name;button.classList.toggle('active',id===activeFestivalId);button.onclick=()=>{activateFestival(id);menu.classList.remove('open');};const remove=document.createElement('button');remove.className='delete-festival';remove.type='button';remove.title='Festival löschen';remove.setAttribute('aria-label',festival.name+' löschen');remove.textContent='🗑';remove.onclick=()=>deleteFestival(id);row.append(button,remove);menu.appendChild(row);});
 }
-function toggleFestivalMenu(){const menu=document.getElementById('festivalMenu');renderFestivalMenu();menu.classList.toggle('open');}
+function toggleImportMenu(){document.getElementById('festivalMenu').classList.remove('open');document.getElementById('onlineMenu').classList.remove('open');document.getElementById('importMenu').classList.toggle('open');}
+function openLocalImport(){document.getElementById('importMenu').classList.remove('open');document.getElementById('scheduleFile').click();}
+function openOnlineFromImportMenu(){document.getElementById('importMenu').classList.remove('open');openOnlineMenu();}
+function toggleFestivalMenu(){document.getElementById('importMenu').classList.remove('open');const menu=document.getElementById('festivalMenu');renderFestivalMenu();menu.classList.toggle('open');}
 async function openOnlineMenu(){
  const localMenu=document.getElementById('festivalMenu'),menu=document.getElementById('onlineMenu');
- localMenu.classList.remove('open');
+ localMenu.classList.remove('open');document.getElementById('importMenu').classList.remove('open');
  if(menu.classList.contains('open')){menu.classList.remove('open');return;}
  menu.innerHTML='<div class="loading">Online-Festivals werden geladen …</div>';menu.classList.add('open');
  try{
