@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>gFP v12</title>
+<title>gFP v15</title>
 <style>
 :root{
   --font-scale:1;--tabs-top:56px;--content-top:108px;--favorites-top:100px;
@@ -21,7 +21,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 .festival-title{flex:1;min-width:0;background:none;border:0;color:#fff;font-weight:bold;font-size:1.15rem;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .header-actions{display:flex;gap:5px;align-items:center}
 .icon-button{width:36px;height:36px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:bold;cursor:pointer}
-.reset-button{background:#666}.zoom-toggle{background:#455a64}.import-toggle{background:#4caf50}.theme-toggle{background:#6b4f8a}.now-button{background:#ffd54f;color:#111}
+.reset-button{background:#666}.zoom-toggle{background:#455a64}.import-toggle{background:#4caf50}.theme-toggle{background:#6b4f8a}.now-button{background:#ffd54f;color:#111;width:78px;height:36px;border-radius:18px;font-size:.82rem;font-weight:700;padding:0 10px;display:flex;align-items:center;justify-content:center}
 .popup{display:none;position:fixed;z-index:1003;top:54px;right:8px;min-width:180px;padding:7px;background:#181818;border:1px solid #555;border-radius:8px;box-shadow:0 4px 14px #0009}
 .popup.open{display:flex;flex-direction:column;gap:6px}
 .popup button{border:0;border-radius:5px;padding:8px;background:#333;color:#fff;text-align:left}
@@ -97,7 +97,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 
 <script>
 'use strict';
-const GFP_VERSION = '12';
+const GFP_VERSION = '15';
 
 const DAYS=['Do','Fr','Sa'];
 const STORAGE='csvFestivalLibrary_v2';
@@ -237,10 +237,61 @@ festivalTitle.addEventListener('click',()=>{renderFestivalMenu();toggleMenu(fest
 importBtn.addEventListener('click',()=>toggleMenu(importMenu));zoomBtn.addEventListener('click',()=>toggleMenu(zoomMenu));
 themeBtn.addEventListener('click',cycleTheme);fontScale.addEventListener('input',()=>applyScale(fontScale.value));zoomResetBtn.addEventListener('click',()=>applyScale(100));
 resetBtn.addEventListener('click',()=>{if(confirm('Alle Favoriten zur\u00FCcksetzen?')){favs=[];document.querySelectorAll('.card').forEach(c=>c.classList.remove('favorite'));document.querySelectorAll('.fav').forEach(b=>b.textContent='\u2606');refreshFavoriteBars();saveState()}});
-nowBtn.addEventListener('click',()=>{const map={4:'Do',5:'Fr',6:'Sa'},day=map[new Date().getDay()];if(!day)return alert('Heute ist kein Festivaltag.');showTab(day);
-  const now=new Date().getHours()*60+new Date().getMinutes();let target=null;
-  for(const card of document.getElementById(day).querySelectorAll('.card')){const m=card.querySelector('.time').textContent.match(/(\d\d):(\d\d).*(\d\d):(\d\d)/);if(!m)continue;let s=+m[1]*60+ +m[2],e=+m[3]*60+ +m[4],n=now;if(e<s)e+=1440;if(n<s&&e>1440)n+=1440;if(n>=s&&n<=e){target=card;break}}
-  target?target.scrollIntoView({behavior:'smooth',block:'start'}):alert('Aktuell spielt laut Zeitplan keine Band.');
+nowBtn.addEventListener('click',()=>{
+  const map={4:'Do',5:'Fr',6:'Sa'},day=map[new Date().getDay()];
+  if(!day)return alert('Heute ist kein Festivaltag.');
+  showTab(day);
+
+  const currentDate=new Date();
+  const now=currentDate.getHours()*60+currentDate.getMinutes();
+  let currentCard=null;
+  let nextCard=null;
+  let nextStart=Infinity;
+
+  for(const card of document.getElementById(day).querySelectorAll('.card')){
+    const timeText=card.querySelector('.time').textContent;
+    const range=timeText.match(/(\d{1,2}):(\d{2}).*?(\d{1,2}):(\d{2})/);
+    const startOnly=timeText.match(/(\d{1,2}):(\d{2})/);
+    if(!startOnly)continue;
+
+    let start=Number(startOnly[1])*60+Number(startOnly[2]);
+    let end=null;
+
+    if(range){
+      start=Number(range[1])*60+Number(range[2]);
+      end=Number(range[3])*60+Number(range[4]);
+      if(end<start)end+=1440;
+
+      let adjustedNow=now;
+      if(adjustedNow<start&&end>1440)adjustedNow+=1440;
+      if(adjustedNow>=start&&adjustedNow<=end){
+        currentCard=card;
+        break;
+      }
+    }
+
+    let comparableStart=start;
+    if(comparableStart<now&&start<360)comparableStart+=1440;
+    if(comparableStart>=now&&comparableStart<nextStart){
+      nextStart=comparableStart;
+      nextCard=card;
+    }
+  }
+
+  const target=currentCard||nextCard;
+  if(target){
+    target.scrollIntoView({behavior:'smooth',block:'start'});
+    target.animate(
+      [
+        {outline:'0 solid rgba(255,213,79,0)'},
+        {outline:'4px solid rgba(255,213,79,.95)'},
+        {outline:'0 solid rgba(255,213,79,0)'}
+      ],
+      {duration:1400,easing:'ease-out'}
+    );
+  }else{
+    alert('Heute spielt laut Zeitplan keine weitere Band.');
+  }
 });
 document.addEventListener('click',e=>{if(!e.target.closest('.popup,.header-actions,.festival-title'))closeMenus()});
 
