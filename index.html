@@ -1,0 +1,298 @@
+﻿<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>gFP v11</title>
+<style>
+:root{
+  --font-scale:1;--tabs-top:56px;--content-top:108px;--favorites-top:100px;
+  --page-bg:#111;--text-color:#eee;--header-bg:#8b0000;--tabs-bg:#222;
+  --tab-active:#444;--card-bg:#1d1d1d;--card-border:#b71c1c;
+  --favorite-bg:#303030;--favorites-bg:#181818
+}
+*{box-sizing:border-box}
+html{font-size:calc(16px * var(--font-scale))}
+body{margin:0;background:var(--page-bg);color:var(--text-color);font-family:Arial,sans-serif;overscroll-behavior-x:none;touch-action:pan-y}
+button,input{font:inherit}
+header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;right:0;z-index:1000}
+.header-content{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.festival-title{flex:1;min-width:0;background:none;border:0;color:#fff;font-weight:bold;font-size:1.15rem;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-actions{display:flex;gap:5px;align-items:center}
+.icon-button{width:36px;height:36px;border:0;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:bold;cursor:pointer}
+.reset-button{background:#666}.zoom-toggle{background:#455a64}.import-toggle{background:#4caf50}.theme-toggle{background:#6b4f8a}.now-button{background:#ffd54f;color:#111}
+.popup{display:none;position:fixed;z-index:1003;top:54px;right:8px;min-width:180px;padding:7px;background:#181818;border:1px solid #555;border-radius:8px;box-shadow:0 4px 14px #0009}
+.popup.open{display:flex;flex-direction:column;gap:6px}
+.popup button{border:0;border-radius:5px;padding:8px;background:#333;color:#fff;text-align:left}
+.popup input{width:100%}
+.festival-menu{left:8px;right:8px;min-width:0}
+.festival-choice{display:flex;gap:5px}.festival-choice button:first-child{flex:1}.delete-button{flex:0 0 auto;background:#7f1d1d!important}
+.tabs{display:flex;position:fixed;top:56px;left:0;right:0;background:var(--tabs-bg);z-index:999;box-shadow:0 2px 6px #0008}
+.tabs button{flex:1;min-height:44px;padding:10px;border:0;background:var(--tabs-bg);color:#fff;font-weight:bold}
+.tabs button.active{background:var(--tab-active)}
+.tabcontent{display:none;padding:108px 10px 12px;min-height:100vh;touch-action:pan-y}
+.tabcontent.active{display:block}
+.favoritesBar{position:sticky;top:100px;z-index:20;display:flex;gap:6px;overflow-x:auto;background:var(--favorites-bg);padding:6px;margin:-6px -10px 8px}
+.favoritesBar:empty{display:none}
+.favChip{background:#333;color:#ffd54f;padding:5px 9px;border-radius:13px;white-space:nowrap;font-size:.88rem}
+.card{background:var(--card-bg);border-left:10px solid var(--card-border);border-radius:10px;padding:12px 128px 12px 12px;margin:10px 0;position:relative;scroll-margin-top:145px}
+.card.has-stage{border-left-color:var(--stage-color)}
+.card.favorite{background:var(--favorite-bg)}.card.favorite .name{color:#ffd54f}
+.time{font-size:1.15rem;font-weight:bold;color:#ffd54f}.stage-letter{margin-right:.42em;font-weight:900}
+.name{font-size:1.25rem;font-weight:bold;margin:6px 0}.genre{color:#bbb;min-height:1.2em}
+.genre[contenteditable=true]{border-bottom:1px dashed #666}.genre:focus{outline:1px solid #81d4fa}
+.fav{position:absolute;right:10px;top:8px;border:0;background:none;color:#ffd54f;font-size:1.7rem}
+.spotify{position:absolute;right:12px;bottom:10px;font-size:1.7rem;text-decoration:none}
+.scoreRow{position:absolute;right:55px;top:43px;width:70px;display:flex;flex-direction:column;gap:8px}
+.scoreLine{display:flex;align-items:center;gap:6px}.scoreNum,.meInput{width:30px;font-weight:bold;color:#fff}
+.meInput{background:#222;border:1px solid #555;border-radius:4px;text-align:center}
+.scoreBar{flex:1;height:14px;background:#333;border-radius:5px;overflow:hidden}.scoreFill{height:100%}
+.empty{padding:18px;color:#aaa;text-align:center}
+.swipe-hint{position:fixed;right:8px;bottom:8px;z-index:1100;padding:5px 9px;border-radius:14px;background:#000a;color:#ddd;font-size:12px;pointer-events:none;transition:opacity .35s}
+@media(max-width:540px) and (orientation:portrait){
+  :root{--tabs-top:48px;--content-top:92px;--favorites-top:92px}
+  header{padding:6px}.festival-title{font-size:.9rem}.icon-button{width:34px;height:34px}
+  .tabs{top:48px}.tabcontent{padding-top:98px}.favoritesBar{top:92px}
+  .card{padding-right:122px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-content">
+    <button id="festivalTitle" class="festival-title" type="button">CSV importieren</button>
+    <div class="header-actions">
+      <button id="resetBtn" class="icon-button reset-button" title="Favoriten zur&#252;cksetzen">&#8634;</button>
+      <button id="zoomBtn" class="icon-button zoom-toggle" title="Schriftgr&#246;&#223;e">&#128269;</button>
+      <button id="importBtn" class="icon-button import-toggle" title="Festival importieren">+</button>
+      <button id="themeBtn" class="icon-button theme-toggle" title="Farbtheme">&#127912;</button>
+      <button id="nowBtn" class="icon-button now-button" title="Jetzt">&#9719;</button>
+    </div>
+  </div>
+</header>
+
+<div id="festivalMenu" class="popup festival-menu"></div>
+<div id="importMenu" class="popup">
+  <button id="localImportBtn">CSV-Import</button>
+  <button id="onlineImportBtn">Online</button>
+</div>
+<div id="zoomMenu" class="popup">
+  <label>Schriftgr&#246;&#223;e <output id="fontScaleValue">100%</output></label>
+  <input id="fontScale" type="range" min="70" max="160" step="5" value="100">
+  <button id="zoomResetBtn">Auf 100 % zur&#252;cksetzen</button>
+</div>
+<div id="onlineMenu" class="popup festival-menu"></div>
+<input id="scheduleFile" type="file" accept=".csv,text/csv" hidden>
+
+<nav class="tabs" aria-label="Festivaltage">
+  <button class="active" data-day="Do">Do</button>
+  <button data-day="Fr">Fr</button>
+  <button data-day="Sa">Sa</button>
+</nav>
+
+<section id="Do" class="tabcontent active"><div class="favoritesBar"></div><div class="empty">Festival &#252;ber &#8222;+&#8220; importieren.</div></section>
+<section id="Fr" class="tabcontent"><div class="favoritesBar"></div></section>
+<section id="Sa" class="tabcontent"><div class="favoritesBar"></div></section>
+
+<script>
+'use strict';
+const GFP_VERSION = '11';
+
+const DAYS=['Do','Fr','Sa'];
+const STORAGE='csvFestivalLibrary_v2';
+const ACTIVE_STORAGE='csvFestivalActive_v2';
+const THEME_STORAGE='gfpColorTheme';
+let festivals=safeJSON(localStorage.getItem(STORAGE),{});
+let activeFestivalId=localStorage.getItem(ACTIVE_STORAGE)||null;
+let favs=[],meScores={},genreNotes={};
+
+const themes={
+  v5:{label:'Rot',page:'#111',text:'#eee',header:'#8b0000',tabs:'#222',active:'#444',card:'#1d1d1d',border:'#b71c1c',favorite:'#303030',favorites:'#181818'},
+  v6:{label:'Blau',page:'#0b121a',text:'#e6edf3',header:'#123b5d',tabs:'#102435',active:'#1e486b',card:'#14212e',border:'#123b5d',favorite:'#23384a',favorites:'#16293a'},
+  v7:{label:'Gr\u00FCn',page:'#10150f',text:'#eef3ea',header:'#385735',tabs:'#1b2b19',active:'#3b5a37',card:'#1a2418',border:'#385735',favorite:'#30412c',favorites:'#263622'}
+};
+
+function safeJSON(value,fallback){try{return value?JSON.parse(value):fallback}catch{return fallback}}
+function esc(value){const d=document.createElement('div');d.textContent=value??'';return d.innerHTML}
+function closeMenus(except){document.querySelectorAll('.popup').forEach(x=>{if(x!==except)x.classList.remove('open')})}
+function toggleMenu(menu){const open=!menu.classList.contains('open');closeMenus(menu);menu.classList.toggle('open',open)}
+function persist(){localStorage.setItem(STORAGE,JSON.stringify(festivals));if(activeFestivalId)localStorage.setItem(ACTIVE_STORAGE,activeFestivalId)}
+function saveState(){if(activeFestivalId&&festivals[activeFestivalId]){Object.assign(festivals[activeFestivalId],{favs,meScores,genreNotes});persist()}}
+
+function showTab(day){
+  DAYS.forEach(id=>document.getElementById(id).classList.toggle('active',id===day));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.dataset.day===day));
+}
+document.querySelectorAll('.tabs button').forEach(button=>button.addEventListener('click',()=>showTab(button.dataset.day)));
+
+function applyTheme(key){
+  key=themes[key]?key:'v5';const t=themes[key],r=document.documentElement;
+  r.style.setProperty('--page-bg',t.page);r.style.setProperty('--text-color',t.text);
+  r.style.setProperty('--header-bg',t.header);r.style.setProperty('--tabs-bg',t.tabs);
+  r.style.setProperty('--tab-active',t.active);r.style.setProperty('--card-bg',t.card);
+  r.style.setProperty('--card-border',t.border);r.style.setProperty('--favorite-bg',t.favorite);
+  r.style.setProperty('--favorites-bg',t.favorites);r.dataset.theme=key;
+  localStorage.setItem(THEME_STORAGE,key);document.getElementById('themeBtn').title='Farbtheme: '+t.label;
+}
+function cycleTheme(){const keys=Object.keys(themes),cur=localStorage.getItem(THEME_STORAGE)||'v5';applyTheme(keys[(keys.indexOf(cur)+1)%keys.length])}
+function applyScale(value){value=Math.max(70,Math.min(160,Number(value)||100));document.documentElement.style.setProperty('--font-scale',value/100);fontScale.value=value;fontScaleValue.textContent=value+'%';localStorage.setItem('gfpFontScale',value)}
+function scoreColor(v){v=Math.max(0,Math.min(100,Number(v)||0));return `hsl(${v*1.2},85%,45%)`}
+
+function refreshFavoriteBars(){
+  document.querySelectorAll('.favoritesBar').forEach(x=>x.innerHTML='');
+  document.querySelectorAll('.card.favorite').forEach(card=>{
+    const chip=document.createElement('button');chip.className='favChip';chip.textContent=card.querySelector('.name').textContent;
+    chip.addEventListener('click',()=>card.scrollIntoView({behavior:'smooth',block:'start'}));
+    card.parentElement.querySelector('.favoritesBar').appendChild(chip);
+  });
+}
+
+function bindCard(card){
+  const id=card.dataset.id,fav=card.querySelector('.fav'),input=card.querySelector('.meInput'),fill=card.querySelector('.meFill'),genre=card.querySelector('.genre');
+  const draw=()=>{const on=favs.includes(id);fav.textContent=on?'\u2605':'\u2606';card.classList.toggle('favorite',on)};
+  draw();fav.addEventListener('click',()=>{favs=favs.includes(id)?favs.filter(x=>x!==id):[...favs,id];draw();refreshFavoriteBars();saveState()});
+  input.value=meScores[id]??0;
+  const update=()=>{let v=Math.max(0,Math.min(100,parseInt(input.value,10)||0));input.value=v;fill.style.width=v+'%';fill.style.background=scoreColor(v);meScores[id]=v;saveState()};
+  update();input.addEventListener('change',update);input.addEventListener('blur',update);input.addEventListener('click',()=>input.select());
+  genre.contentEditable='true';genre.setAttribute('role','textbox');genre.textContent=genreNotes[id]??genre.textContent;
+  genre.addEventListener('input',()=>{genreNotes[id]=genre.textContent;saveState()});
+}
+
+function renderFestival(festival){
+  const stages=[...new Set(festival.rows.map(x=>x.stage).filter(Boolean))];
+  const palette=['#e53935','#1e88e5','#43a047','#fb8c00','#8e24aa','#00acc1','#fdd835'];
+  const stageColors=new Map(stages.map((s,i)=>[s,palette[i%palette.length]]));
+  DAYS.forEach(day=>{
+    const section=document.getElementById(day);section.innerHTML='<div class="favoritesBar"></div>';
+    const entries=festival.rows.filter(x=>x.day===day);
+    if(!entries.length)section.insertAdjacentHTML('beforeend','<div class="empty">Keine Eintr\u00E4ge.</div>');
+    entries.forEach((entry,index)=>{
+      const id=day+'-'+index,color=stageColors.get(entry.stage)||'#ffd54f';
+      const card=document.createElement('article');card.className='card'+(entry.stage?' has-stage':'');card.dataset.id=id;card.style.setProperty('--stage-color',color);
+      card.innerHTML=`<button class="fav" aria-label="Favorit">\u2606</button>
+        <div class="time">${entry.stage?`<span class="stage-letter" style="color:${color}" title="${esc(entry.stage)}">${esc(entry.stage[0].toUpperCase())}</span>`:''}${esc(entry.time)}</div>
+        <div class="name">${esc(entry.name)}</div><div class="genre">${esc(entry.genre)}</div>
+        <div class="scoreRow">
+          <div class="scoreLine"><div class="scoreNum">${entry.score}</div><div class="scoreBar"><div class="scoreFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div>
+          <div class="scoreLine"><input class="meInput" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill"></div></div></div>
+        </div>${entry.spotify?`<a class="spotify" href="${esc(entry.spotify)}" target="_blank" rel="noopener" aria-label="Spotify">\uD83C\uDFA7</a>`:''}`;
+      section.appendChild(card);bindCard(card);
+    });
+  });
+  refreshFavoriteBars();showTab('Do');
+}
+
+function activateFestival(id){
+  const f=festivals[id];if(!f)return;activeFestivalId=id;favs=f.favs||[];meScores=f.meScores||{};genreNotes=f.genreNotes||{};
+  festivalTitle.textContent=f.name;persist();renderFestival(f);renderFestivalMenu();
+}
+function deleteFestival(id){
+  if(!confirm('Festival l\u00F6schen?'))return;delete festivals[id];
+  if(activeFestivalId===id){activeFestivalId=null;localStorage.removeItem(ACTIVE_STORAGE);festivalTitle.textContent='CSV importieren';DAYS.forEach(d=>document.getElementById(d).innerHTML='<div class="favoritesBar"></div>')}
+  persist();renderFestivalMenu();
+}
+function renderFestivalMenu(){
+  festivalMenu.innerHTML='';const list=Object.entries(festivals).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  if(!list.length){festivalMenu.innerHTML='<div class="empty">Noch kein Festival importiert.</div>';return}
+  list.forEach(([id,f])=>{const row=document.createElement('div');row.className='festival-choice';
+    const select=document.createElement('button');select.textContent=f.name;select.addEventListener('click',()=>{activateFestival(id);festivalMenu.classList.remove('open')});
+    const del=document.createElement('button');del.className='delete-button';del.textContent='\uD83D\uDDD1';del.addEventListener('click',()=>deleteFestival(id));
+    row.append(select,del);festivalMenu.appendChild(row);
+  });
+}
+function parseCSV(text){
+  const first=text.replace(/^\uFEFF/,'').split(/\r?\n/,1)[0],delimiter=first.includes(';')&&!first.includes(',')?';':',';
+  const rows=[];let row=[],cell='',quoted=false;
+  for(let i=0;i<text.length;i++){const ch=text[i],next=text[i+1];
+    if(ch==='"'&&quoted&&next==='"'){cell+='"';i++}else if(ch==='"')quoted=!quoted;
+    else if(ch===delimiter&&!quoted){row.push(cell.trim());cell=''}
+    else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&next==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=''}
+    else cell+=ch;
+  }row.push(cell.trim());if(row.some(Boolean))rows.push(row);return rows;
+}
+function norm(v){return String(v||'').replace(/^\uFEFF/,'').toLowerCase().trim().replace(/[ _-]/g,'')}
+function dayId(v){v=String(v||'').toLowerCase().trim();if(/^(do|donnerstag|thu|thursday)/.test(v))return'Do';if(/^(fr|freitag|fri|friday)/.test(v))return'Fr';if(/^(sa|samstag|sat|saturday)/.test(v))return'Sa';return null}
+function importText(text,fileName){
+  const rows=parseCSV(text);if(rows.length<2)throw new Error('Die CSV enth\u00E4lt keine Datenzeilen.');
+  const header=rows[0].map(norm),col=Object.fromEntries(header.map((x,i)=>[x,i]));
+  const required=['tage','zeiten','bandname','genre','spotifylink','gscore'],missing=required.filter(x=>!(x in col));
+  if(missing.length)throw new Error('CSV-Kopfzeile unvollst\u00E4ndig. Erwartet: tage, zeiten, bandname, genre, spotify-link, gscore');
+  const schedule=[];rows.slice(1).forEach(v=>{const day=dayId(v[col.tage]),name=(v[col.bandname]||'').trim();if(!day||!name)return;
+    schedule.push({day,time:v[col.zeiten]||'',stage:(v[col.stage]||'').trim(),name,genre:v[col.genre]||'',spotify:v[col.spotifylink]||'',score:Math.max(0,Math.min(100,parseInt(v[col.gscore],10)||0))});
+  });
+  if(!schedule.length)throw new Error('Keine g\u00FCltigen Zeilen gefunden.');
+  const name=fileName.replace(/\.[^.]+$/,'').trim()||'Unbenanntes Festival',id=name.toLowerCase().replace(/[^a-z0-9\u00E4\u00F6\u00FC\u00DF]+/gi,'-').replace(/^-|-$/g,'')||'festival',old=festivals[id]||{};
+  festivals[id]={name,rows:schedule,favs:old.favs||[],meScores:old.meScores||{},genreNotes:old.genreNotes||{}};activateFestival(id);alert(schedule.length+' Bands importiert.');
+}
+
+scheduleFile.addEventListener('change',()=>{const file=scheduleFile.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{importText(r.result,file.name)}catch(e){alert(e.message)}};r.readAsText(file,'UTF-8');scheduleFile.value=''});
+localImportBtn.addEventListener('click',()=>{importMenu.classList.remove('open');scheduleFile.click()});
+onlineImportBtn.addEventListener('click',async()=>{importMenu.classList.remove('open');toggleMenu(onlineMenu);onlineMenu.innerHTML='<div class="empty">Online-Festivals werden geladen \u2026</div>';
+  try{const res=await fetch('csv/index.json',{cache:'no-store'});if(!res.ok)throw new Error();const items=await res.json();onlineMenu.innerHTML='';
+    items.forEach(item=>{const b=document.createElement('button');b.textContent='\u2601 '+(item.name||item.file);b.addEventListener('click',async()=>{try{const r=await fetch('csv/'+item.file,{cache:'no-store'});importText(await r.text(),item.name||item.file);onlineMenu.classList.remove('open')}catch{alert('Online-Festival konnte nicht geladen werden.')}});onlineMenu.appendChild(b)});
+  }catch{onlineMenu.innerHTML='<div class="empty">Keine Online-Liste gefunden.</div>'}
+});
+festivalTitle.addEventListener('click',()=>{renderFestivalMenu();toggleMenu(festivalMenu)});
+importBtn.addEventListener('click',()=>toggleMenu(importMenu));zoomBtn.addEventListener('click',()=>toggleMenu(zoomMenu));
+themeBtn.addEventListener('click',cycleTheme);fontScale.addEventListener('input',()=>applyScale(fontScale.value));zoomResetBtn.addEventListener('click',()=>applyScale(100));
+resetBtn.addEventListener('click',()=>{if(confirm('Alle Favoriten zur\u00FCcksetzen?')){favs=[];document.querySelectorAll('.card').forEach(c=>c.classList.remove('favorite'));document.querySelectorAll('.fav').forEach(b=>b.textContent='\u2606');refreshFavoriteBars();saveState()}});
+nowBtn.addEventListener('click',()=>{const map={4:'Do',5:'Fr',6:'Sa'},day=map[new Date().getDay()];if(!day)return alert('Heute ist kein Festivaltag.');showTab(day);
+  const now=new Date().getHours()*60+new Date().getMinutes();let target=null;
+  for(const card of document.getElementById(day).querySelectorAll('.card')){const m=card.querySelector('.time').textContent.match(/(\d\d):(\d\d).*(\d\d):(\d\d)/);if(!m)continue;let s=+m[1]*60+ +m[2],e=+m[3]*60+ +m[4],n=now;if(e<s)e+=1440;if(n<s&&e>1440)n+=1440;if(n>=s&&n<=e){target=card;break}}
+  target?target.scrollIntoView({behavior:'smooth',block:'start'}):alert('Aktuell spielt laut Zeitplan keine Band.');
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.popup,.header-actions,.festival-title'))closeMenus()});
+
+/* Mobile Swipe v11: Pointer Events für Android, Touch-Fallback für ältere Browser. */
+let swipeStartX=0,swipeStartY=0,swipeStartTime=0,swipeTracking=false,swipeBlocked=false,swipePointerId=null;
+const swipeInteractive=target=>!!target.closest('input,textarea,select,button,a,[contenteditable="true"],.favoritesBar,.popup');
+
+function beginSwipe(x,y,target,pointerId=null){
+  swipeStartX=x;swipeStartY=y;swipeStartTime=Date.now();
+  swipeTracking=true;swipeBlocked=swipeInteractive(target);swipePointerId=pointerId;
+}
+function finishSwipe(x,y){
+  if(!swipeTracking||swipeBlocked){swipeTracking=false;return}
+  const dx=x-swipeStartX,dy=y-swipeStartY,elapsed=Date.now()-swipeStartTime;
+  swipeTracking=false;swipePointerId=null;
+  if(elapsed>1200||Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.15)return;
+  const active=document.querySelector('.tabcontent.active');
+  if(!active)return;
+  const index=DAYS.indexOf(active.id),next=dx<0?index+1:index-1;
+  if(next>=0&&next<DAYS.length){
+    showTab(DAYS[next]);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+}
+
+if('PointerEvent' in window){
+  document.addEventListener('pointerdown',event=>{
+    if(event.pointerType==='mouse'||!event.isPrimary)return;
+    beginSwipe(event.clientX,event.clientY,event.target,event.pointerId);
+  },{passive:true});
+  document.addEventListener('pointerup',event=>{
+    if(!swipeTracking||event.pointerId!==swipePointerId)return;
+    finishSwipe(event.clientX,event.clientY);
+  },{passive:true});
+  document.addEventListener('pointercancel',event=>{
+    if(event.pointerId===swipePointerId){swipeTracking=false;swipePointerId=null}
+  },{passive:true});
+}else{
+  document.addEventListener('touchstart',event=>{
+    if(event.touches.length!==1){swipeTracking=false;return}
+    const touch=event.touches[0];beginSwipe(touch.clientX,touch.clientY,event.target);
+  },{passive:true});
+  document.addEventListener('touchend',event=>{
+    if(event.changedTouches.length!==1){swipeTracking=false;return}
+    const touch=event.changedTouches[0];finishSwipe(touch.clientX,touch.clientY);
+  },{passive:true});
+  document.addEventListener('touchcancel',()=>{swipeTracking=false},{passive:true});
+}
+
+applyTheme(localStorage.getItem(THEME_STORAGE)||'v5');applyScale(localStorage.getItem('gfpFontScale')||100);
+if(activeFestivalId&&festivals[activeFestivalId])activateFestival(activeFestivalId);else renderFestivalMenu();
+if(matchMedia('(pointer:coarse)').matches){const h=document.createElement('div');h.className='swipe-hint';h.textContent='\u2194 Tage wischen';document.body.appendChild(h);setTimeout(()=>h.style.opacity='0',3000);setTimeout(()=>h.remove(),3600)}
+</script>
+</body>
+</html>
