@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>gFP v18</title>
+<title>gFP v20</title>
 <style>
 :root{
   --font-scale:1;--tabs-top:56px;--content-top:108px;--favorites-top:100px;
@@ -44,7 +44,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 .genre[contenteditable=true]{border-bottom:1px dashed #666}.genre:focus{outline:1px solid #81d4fa}
 .fav{position:absolute;right:10px;top:8px;border:0;background:none;color:#ffd54f;font-size:1.7rem}
 .spotify{position:absolute;right:12px;bottom:10px;font-size:1.7rem;text-decoration:none}
-.alarm-button{border:0;background:none;color:#888;font-size:1.15rem;line-height:1;cursor:pointer;padding:0 .2rem;margin-left:.35rem;vertical-align:middle}
+.alarm-button{border:0;background:none;color:#888;line-height:1;cursor:pointer;padding:0 .2rem;margin-left:.35rem;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center}.alarm-button svg{width:1.15rem;height:1.15rem;display:block;fill:currentColor}
 .alarm-button.active{color:#ffd54f}
 .alarm-dialog{border:1px solid #666;border-radius:12px;background:#1b1b1b;color:#fff;padding:0;max-width:340px;width:calc(100% - 28px);box-shadow:0 12px 40px #000b;position:fixed;top:18%;margin:auto}
 .alarm-dialog::backdrop{background:#000a}
@@ -57,6 +57,13 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 .alarm-actions button{border:0;border-radius:7px;padding:9px 13px;color:#fff;background:#444}
 .alarm-actions .alarm-ok{background:#ffd54f;color:#111;font-weight:bold}
 .alarm-actions .alarm-off{margin-right:auto;background:#7f1d1d}
+.browser-alarm{border:2px solid #ffd54f;border-radius:14px;background:#171717;color:#fff;padding:0;max-width:360px;width:calc(100% - 28px);box-shadow:0 16px 48px #000c;position:fixed;top:14%;margin:auto}
+.browser-alarm::backdrop{background:#000c}
+.browser-alarm-content{padding:20px;text-align:center}
+.browser-alarm-icon{font-size:2.4rem;color:#ffd54f;margin-bottom:8px}
+.browser-alarm h2{margin:0 0 8px;font-size:1.35rem}
+.browser-alarm p{margin:6px 0;color:#ddd}
+.browser-alarm button{margin-top:14px;border:0;border-radius:8px;padding:10px 18px;background:#ffd54f;color:#111;font-weight:bold}
 .scoreRow{position:absolute;right:55px;top:43px;width:70px;display:flex;flex-direction:column;gap:8px}
 .scoreLine{display:flex;align-items:center;gap:6px}.scoreNum,.meInput{width:30px;font-weight:bold;color:#fff}
 .meInput{background:#222;border:1px solid #555;border-radius:4px;text-align:center}
@@ -96,6 +103,15 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
   <button id="zoomResetBtn">Auf 100 % zur&#252;cksetzen</button>
 </div>
 <div id="onlineMenu" class="popup festival-menu"></div>
+<dialog id="browserAlarmDialog" class="browser-alarm">
+  <div class="browser-alarm-content">
+    <div class="browser-alarm-icon">⏰</div>
+    <h2 id="browserAlarmTitle">Band beginnt bald</h2>
+    <p id="browserAlarmText"></p>
+    <button id="browserAlarmOk" type="button">OK</button>
+  </div>
+</dialog>
+
 <dialog id="alarmDialog" class="alarm-dialog">
   <form method="dialog" class="alarm-form">
     <h2 id="alarmTitle">Band-Alarm</h2>
@@ -125,7 +141,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 
 <script>
 'use strict';
-const GFP_VERSION = '18';
+const GFP_VERSION = '20';
 
 const DAYS=['Do','Fr','Sa'];
 const STORAGE='csvFestivalLibrary_v2';
@@ -136,6 +152,7 @@ let activeFestivalId=localStorage.getItem(ACTIVE_STORAGE)||null;
 let favs=[],meScores={},genreNotes={},alarms={};
 const alarmTimers=new Map();
 let alarmCard=null;
+const firedAlarms=new Set();
 
 const themes={
   v5:{label:'Rot',page:'#111',text:'#eee',header:'#8b0000',tabs:'#222',active:'#444',card:'#1d1d1d',border:'#b71c1c',favorite:'#303030',favorites:'#181818'},
@@ -204,21 +221,27 @@ function clearAlarmTimer(id){
   alarmTimers.delete(id);
 }
 function fireAlarm(card){
+  const id=card.dataset.id;
+  if(firedAlarms.has(id))return;
+  firedAlarms.add(id);
   const name=card.querySelector('.name')?.textContent||'Band';
-  const time=card.querySelector('.time')?.textContent.trim()||'';
-  const message=`${name} beginnt um ${time}.`;
-  if('Notification' in window&&Notification.permission==='granted'){
-    new Notification('Festival-Alarm',{body:message,tag:'gfp-'+card.dataset.id,renotify:true});
+  const time=card.querySelector('.time')?.childNodes[0]?.textContent?.trim()||card.querySelector('.time')?.textContent.trim()||'';
+  browserAlarmTitle.textContent='Band beginnt bald';
+  browserAlarmText.textContent=`${name} beginnt um ${time}.`;
+  if(typeof browserAlarmDialog.showModal==='function'){
+    if(!browserAlarmDialog.open)browserAlarmDialog.showModal();
   }else{
-    alert(message);
+    alert(`${name} beginnt um ${time}.`);
   }
   if(navigator.vibrate)navigator.vibrate([250,120,250]);
 }
 function scheduleAlarm(card){
-  const id=card.dataset.id,minutes=Number(alarms[id]);
+  const id=card.dataset.id;
+  const hasAlarm=Object.prototype.hasOwnProperty.call(alarms,id)&&Number.isFinite(Number(alarms[id]));
+  const minutes=hasAlarm?Number(alarms[id]):NaN;
   clearAlarmTimer(id);
-  card.querySelector('.alarm-button')?.classList.toggle('active',Number.isFinite(minutes));
-  if(!Number.isFinite(minutes))return;
+  card.querySelector('.alarm-button')?.classList.toggle('active',hasAlarm);
+  if(!hasAlarm)return;
   const alarmAt=alarmDateFor(card,minutes);
   if(!alarmAt)return;
   const delay=alarmAt.getTime()-Date.now();
@@ -241,13 +264,11 @@ function openAlarmDialog(card){
   alarmMinutes.oninput=updateInfo;updateInfo();
   if(typeof alarmDialog.showModal==='function')alarmDialog.showModal();else alert('Dieser Browser unterstützt den Alarmdialog nicht.');
 }
-async function confirmAlarm(){
+function confirmAlarm(){
   if(!alarmCard)return;
   const minutes=Math.max(0,Math.min(1440,parseInt(alarmMinutes.value,10)||0));
-  if('Notification' in window&&Notification.permission==='default'){
-    await Notification.requestPermission();
-  }
   alarms[alarmCard.dataset.id]=minutes;
+  firedAlarms.delete(alarmCard.dataset.id);
   saveState();scheduleAlarm(alarmCard);alarmDialog.close();
 }
 function disableAlarm(){
@@ -256,6 +277,19 @@ function disableAlarm(){
   clearAlarmTimer(alarmCard.dataset.id);
   alarmCard.querySelector('.alarm-button')?.classList.remove('active');
   saveState();alarmDialog.close();
+}
+
+function checkDueAlarms(){
+  document.querySelectorAll('.card').forEach(card=>{
+    const id=card.dataset.id;
+    if(!Object.prototype.hasOwnProperty.call(alarms,id)||firedAlarms.has(id))return;
+    const minutes=Number(alarms[id]);
+    const alarmAt=alarmDateFor(card,minutes);
+    const start=getBandStart(card);
+    if(!alarmAt||!start)return;
+    const now=Date.now();
+    if(now>=alarmAt.getTime()&&now<=start.getTime()+30*60000)fireAlarm(card);
+  });
 }
 
 function bindCard(card){
@@ -282,7 +316,7 @@ function renderFestival(festival){
       const id=day+'-'+index,color=stageColors.get(entry.stage)||'#ffd54f';
       const card=document.createElement('article');card.className='card'+(entry.stage?' has-stage':'');card.dataset.id=id;card.style.setProperty('--stage-color',color);
       card.innerHTML=`<button class="fav" aria-label="Favorit">\u2606</button>
-        <div class="time">${entry.stage?`<span class="stage-letter" style="color:${color}" title="${esc(entry.stage)}">${esc(entry.stage[0].toUpperCase())}</span>`:''}${esc(entry.time)}<button class="alarm-button" type="button" aria-label="Alarm einstellen" title="Alarm einstellen">⏰</button></div>
+        <div class="time">${entry.stage?`<span class="stage-letter" style="color:${color}" title="${esc(entry.stage)}">${esc(entry.stage[0].toUpperCase())}</span>`:''}${esc(entry.time)}<button class="alarm-button" type="button" aria-label="Alarm einstellen" title="Alarm einstellen"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.88 3.39 6.6 1.86 2 5.71l1.29 1.53 4.59-3.85M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16m0 14a6 6 0 1 1 0-12 6 6 0 0 1 0 12m1-11h-2v6l5.25 3.15 1-1.64-4.25-2.51V7M5 22h2l1.5-2.5-1.7-1L5 22m12 0h2l-1.8-3.5-1.7 1L17 22Z"/></svg></button></div>
         <div class="name">${esc(entry.name)}</div><div class="genre">${esc(entry.genre)}</div>
         <div class="scoreRow">
           <div class="scoreLine"><div class="scoreNum">${entry.score}</div><div class="scoreBar"><div class="scoreFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div>
@@ -348,6 +382,7 @@ festivalTitle.addEventListener('click',()=>{renderFestivalMenu();toggleMenu(fest
 importBtn.addEventListener('click',()=>toggleMenu(importMenu));zoomBtn.addEventListener('click',()=>toggleMenu(zoomMenu));
 themeBtn.addEventListener('click',cycleTheme);fontScale.addEventListener('input',()=>applyScale(fontScale.value));zoomResetBtn.addEventListener('click',()=>applyScale(100));
 resetBtn.addEventListener('click',()=>{if(confirm('Alle Favoriten zur\u00FCcksetzen?')){favs=[];document.querySelectorAll('.card').forEach(c=>c.classList.remove('favorite'));document.querySelectorAll('.fav').forEach(b=>b.textContent='\u2606');refreshFavoriteBars();saveState()}});
+browserAlarmOk.addEventListener('click',()=>browserAlarmDialog.close());
 alarmOkBtn.addEventListener('click',confirmAlarm);
 alarmOffBtn.addEventListener('click',disableAlarm);
 alarmDialog.addEventListener('close',()=>{alarmCard=null});
@@ -409,6 +444,9 @@ nowBtn.addEventListener('click',()=>{
   }
 });
 document.addEventListener('click',e=>{if(!e.target.closest('.popup,.header-actions,.festival-title'))closeMenus()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDueAlarms()});
+window.addEventListener('focus',checkDueAlarms);
+setInterval(checkDueAlarms,30000);
 
 /* Mobile Swipe v11: Pointer Events für Android, Touch-Fallback für ältere Browser. */
 let swipeStartX=0,swipeStartY=0,swipeStartTime=0,swipeTracking=false,swipePointerId=null;
