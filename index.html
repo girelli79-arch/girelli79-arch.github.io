@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>gFP v17</title>
+<title>gFP v18</title>
 <style>
 :root{
   --font-scale:1;--tabs-top:56px;--content-top:108px;--favorites-top:100px;
@@ -44,9 +44,9 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 .genre[contenteditable=true]{border-bottom:1px dashed #666}.genre:focus{outline:1px solid #81d4fa}
 .fav{position:absolute;right:10px;top:8px;border:0;background:none;color:#ffd54f;font-size:1.7rem}
 .spotify{position:absolute;right:12px;bottom:10px;font-size:1.7rem;text-decoration:none}
-.alarm-button{border:0;background:none;color:#bbb;font-size:1.25rem;line-height:1;cursor:pointer;padding:0 .25rem;margin-left:.35rem;vertical-align:middle}
+.alarm-button{border:0;background:none;color:#888;font-size:1.15rem;line-height:1;cursor:pointer;padding:0 .2rem;margin-left:.35rem;vertical-align:middle}
 .alarm-button.active{color:#ffd54f}
-.alarm-dialog{border:1px solid #666;border-radius:12px;background:#1b1b1b;color:#fff;padding:0;max-width:340px;width:calc(100% - 28px);box-shadow:0 12px 40px #000b}
+.alarm-dialog{border:1px solid #666;border-radius:12px;background:#1b1b1b;color:#fff;padding:0;max-width:340px;width:calc(100% - 28px);box-shadow:0 12px 40px #000b;position:fixed;top:18%;margin:auto}
 .alarm-dialog::backdrop{background:#000a}
 .alarm-form{padding:18px;display:flex;flex-direction:column;gap:12px}
 .alarm-form h2{margin:0;font-size:1.15rem}
@@ -125,7 +125,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 
 <script>
 'use strict';
-const GFP_VERSION = '17';
+const GFP_VERSION = '18';
 
 const DAYS=['Do','Fr','Sa'];
 const STORAGE='csvFestivalLibrary_v2';
@@ -282,8 +282,8 @@ function renderFestival(festival){
       const id=day+'-'+index,color=stageColors.get(entry.stage)||'#ffd54f';
       const card=document.createElement('article');card.className='card'+(entry.stage?' has-stage':'');card.dataset.id=id;card.style.setProperty('--stage-color',color);
       card.innerHTML=`<button class="fav" aria-label="Favorit">\u2606</button>
-        <div class="time">${entry.stage?`<span class="stage-letter" style="color:${color}" title="${esc(entry.stage)}">${esc(entry.stage[0].toUpperCase())}</span>`:''}${esc(entry.time)}</div>
-        <div class="name">${esc(entry.name)}<button class="alarm-button" type="button" aria-label="Alarm einstellen" title="Alarm einstellen">⏰</button></div><div class="genre">${esc(entry.genre)}</div>
+        <div class="time">${entry.stage?`<span class="stage-letter" style="color:${color}" title="${esc(entry.stage)}">${esc(entry.stage[0].toUpperCase())}</span>`:''}${esc(entry.time)}<button class="alarm-button" type="button" aria-label="Alarm einstellen" title="Alarm einstellen">⏰</button></div>
+        <div class="name">${esc(entry.name)}</div><div class="genre">${esc(entry.genre)}</div>
         <div class="scoreRow">
           <div class="scoreLine"><div class="scoreNum">${entry.score}</div><div class="scoreBar"><div class="scoreFill" style="width:${entry.score}%;background:${scoreColor(entry.score)}"></div></div></div>
           <div class="scoreLine"><input class="meInput" inputmode="numeric" pattern="[0-9]*" value="0"><div class="scoreBar"><div class="scoreFill meFill"></div></div></div>
