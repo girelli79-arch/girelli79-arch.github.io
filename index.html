@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>gFP v11</title>
+<title>gFP v12</title>
 <style>
 :root{
   --font-scale:1;--tabs-top:56px;--content-top:108px;--favorites-top:100px;
@@ -97,7 +97,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 
 <script>
 'use strict';
-const GFP_VERSION = '11';
+const GFP_VERSION = '12';
 
 const DAYS=['Do','Fr','Sa'];
 const STORAGE='csvFestivalLibrary_v2';
@@ -245,15 +245,14 @@ nowBtn.addEventListener('click',()=>{const map={4:'Do',5:'Fr',6:'Sa'},day=map[ne
 document.addEventListener('click',e=>{if(!e.target.closest('.popup,.header-actions,.festival-title'))closeMenus()});
 
 /* Mobile Swipe v11: Pointer Events für Android, Touch-Fallback für ältere Browser. */
-let swipeStartX=0,swipeStartY=0,swipeStartTime=0,swipeTracking=false,swipeBlocked=false,swipePointerId=null;
-const swipeInteractive=target=>!!target.closest('input,textarea,select,button,a,[contenteditable="true"],.favoritesBar,.popup');
+let swipeStartX=0,swipeStartY=0,swipeStartTime=0,swipeTracking=false,swipePointerId=null;
 
-function beginSwipe(x,y,target,pointerId=null){
+function beginSwipe(x,y,pointerId=null){
   swipeStartX=x;swipeStartY=y;swipeStartTime=Date.now();
-  swipeTracking=true;swipeBlocked=swipeInteractive(target);swipePointerId=pointerId;
+  swipeTracking=true;swipePointerId=pointerId;
 }
 function finishSwipe(x,y){
-  if(!swipeTracking||swipeBlocked){swipeTracking=false;return}
+  if(!swipeTracking){return}
   const dx=x-swipeStartX,dy=y-swipeStartY,elapsed=Date.now()-swipeStartTime;
   swipeTracking=false;swipePointerId=null;
   if(elapsed>1200||Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.15)return;
@@ -269,7 +268,7 @@ function finishSwipe(x,y){
 if('PointerEvent' in window){
   document.addEventListener('pointerdown',event=>{
     if(event.pointerType==='mouse'||!event.isPrimary)return;
-    beginSwipe(event.clientX,event.clientY,event.target,event.pointerId);
+    beginSwipe(event.clientX,event.clientY,event.pointerId);
   },{passive:true});
   document.addEventListener('pointerup',event=>{
     if(!swipeTracking||event.pointerId!==swipePointerId)return;
@@ -281,7 +280,7 @@ if('PointerEvent' in window){
 }else{
   document.addEventListener('touchstart',event=>{
     if(event.touches.length!==1){swipeTracking=false;return}
-    const touch=event.touches[0];beginSwipe(touch.clientX,touch.clientY,event.target);
+    const touch=event.touches[0];beginSwipe(touch.clientX,touch.clientY);
   },{passive:true});
   document.addEventListener('touchend',event=>{
     if(event.changedTouches.length!==1){swipeTracking=false;return}
