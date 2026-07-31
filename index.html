@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>gFP v15</title>
+<title>gFP v16</title>
 <style>
 :root{
   --font-scale:1;--tabs-top:56px;--content-top:108px;--favorites-top:100px;
@@ -52,7 +52,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 .swipe-hint{position:fixed;right:8px;bottom:8px;z-index:1100;padding:5px 9px;border-radius:14px;background:#000a;color:#ddd;font-size:12px;pointer-events:none;transition:opacity .35s}
 @media(max-width:540px) and (orientation:portrait){
   :root{--tabs-top:48px;--content-top:92px;--favorites-top:92px}
-  header{padding:6px}.festival-title{font-size:.9rem}.icon-button{width:34px;height:34px}
+  header{padding:6px}.festival-title{font-size:.9rem}.icon-button{width:34px;height:34px}.now-button{width:78px;height:34px;border-radius:17px}
   .tabs{top:48px}.tabcontent{padding-top:98px}.favoritesBar{top:92px}
   .card{padding-right:122px}
 }
@@ -67,7 +67,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
       <button id="zoomBtn" class="icon-button zoom-toggle" title="Schriftgr&#246;&#223;e">&#128269;</button>
       <button id="importBtn" class="icon-button import-toggle" title="Festival importieren">+</button>
       <button id="themeBtn" class="icon-button theme-toggle" title="Farbtheme">&#127912;</button>
-      <button id="nowBtn" class="icon-button now-button" title="Jetzt">&#9719;</button>
+      <button id="nowBtn" class="icon-button now-button" title="Jetzt">JETZT</button>
     </div>
   </div>
 </header>
@@ -97,7 +97,7 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 
 <script>
 'use strict';
-const GFP_VERSION = '15';
+const GFP_VERSION = '16';
 
 const DAYS=['Do','Fr','Sa'];
 const STORAGE='csvFestivalLibrary_v2';
