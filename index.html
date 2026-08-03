@@ -73,7 +73,9 @@ header{background:var(--header-bg);padding:10px;position:fixed;top:0;left:0;righ
 @media(max-width:540px) and (orientation:portrait){
   :root{--tabs-top:48px;--content-top:92px;--favorites-top:92px}
   header{padding:6px}.festival-title{font-size:.9rem}.icon-button{width:34px;height:34px}.now-button{width:78px;height:34px;border-radius:17px}
-  .tabs{top:48px}.tabcontent{padding-top:98px}.favoritesBar{top:92px}
+  .tabs{top:48px}.tabcontent{padding-top:98px}
+  .favoritesBar{top:92px;flex-wrap:wrap;overflow-x:visible;align-content:flex-start}
+  .favChip{max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left}
   .card{padding-right:122px}
 }
 </style>
