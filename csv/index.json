@@ -4,7 +4,11 @@
     "file": "Helmfest_2026.csv"
   },
   {
-    "name": "Party.San 2026",
+    "name": "PartySan 2026",
     "file": "PartySan_2026.csv"
+  },
+  {
+    "name": "PartySan 2026 v2",
+    "file": "PartySan_2026_v2.csv"
   }
 ]
